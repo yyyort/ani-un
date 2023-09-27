@@ -20,9 +20,14 @@ class Player(pygame.sprite.Sprite):
             self.rect.x -= self.speed * dt
         if keys[pygame.K_d] and self.rect.x < width - self.rect.width:
             self.rect.x += self.speed * dt
+
+    """ def movement(self):
+        randomx = randint(0, width)
+        self.rect.x = randomx """
     
     def update(self):
         self.player_input()
+        """ self.movement() """
 
 class Fruit(pygame.sprite.Sprite):
     def __init__(self):
@@ -44,10 +49,16 @@ class Fruit(pygame.sprite.Sprite):
         self.destroy()
 
     def destroy(self):
-        if self.rect.y > height - 200:
+        if self.rect.y > height - 100:
+            decrement_health()
             self.kill()
 
+
+
+
+
 score = 1
+health = 3
 
 #collision
 def collision():
@@ -59,8 +70,27 @@ def collision():
 #score
 def display_score(score):
     score_surf = test_font.render(f'Score: {score}', False, (64, 64, 64))
-    score_rect = score_surf.get_rect(center=(width / 2, 50))
+    score_rect = score_surf.get_rect(center=(width - 100, 50))
     screen.blit(score_surf, score_rect)
+
+hearts = [
+            'assets/heart1.png',
+            'assets/heart2.png',
+            'assets/heart3.png'
+        ]
+
+#health
+def decrement_health():
+  global health
+  health -= 1
+
+
+def display_health():
+    health_surf = pygame.image.load(hearts[health - 1]).convert_alpha()
+    health_surf = pygame.transform.scale(health_surf, (300, 50))
+    health_rect = health_surf.get_rect(center=(300, 50))
+    screen.blit(health_surf, health_rect)
+
 
 # pygame setup
 pygame.init()
@@ -86,8 +116,6 @@ fruit_group = pygame.sprite.Group()
 """ fruit = pygame.sprite.Group()
 for i in range(randint(1, 10)):
     fruit.add(Fruit()) """
-
-fruit_list = []
 
 # timer
 fruit_timer = pygame.USEREVENT + 1
@@ -120,9 +148,16 @@ while running:
         score += 1
 
     display_score(score)
+    display_health()
 
    
     pygame.display.update()
+
+    
+    # health
+
+    if health <= 0:
+        running = False
 
     # limits FPS to 60
     # dt is delta time in seconds since last frame, used for framerate-
