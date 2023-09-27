@@ -47,11 +47,20 @@ class Fruit(pygame.sprite.Sprite):
         if self.rect.y > height - 200:
             self.kill()
 
+score = 1
+
 #collision
 def collision():
     if pygame.sprite.spritecollide(player.sprite, fruit_group, True):
-        print("collide")
-
+        return True
+    else:
+        return False
+    
+#score
+def display_score(score):
+    score_surf = test_font.render(f'Score: {score}', False, (64, 64, 64))
+    score_rect = score_surf.get_rect(center=(width / 2, 50))
+    screen.blit(score_surf, score_rect)
 
 # pygame setup
 pygame.init()
@@ -59,6 +68,8 @@ screen = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
 running = True
 dt = 0
+
+test_font = pygame.font.Font('font/Pixeltype.ttf', 50)
 
 sky = pygame.image.load("assets/Sky.png").convert()
 ground = pygame.image.load("assets/ground.png").convert()
@@ -76,6 +87,8 @@ fruit_group = pygame.sprite.Group()
 for i in range(randint(1, 10)):
     fruit.add(Fruit()) """
 
+fruit_list = []
+
 # timer
 fruit_timer = pygame.USEREVENT + 1
 pygame.time.set_timer(fruit_timer, 1000)
@@ -86,7 +99,7 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        if event.type == fruit_timer:
+        if event.type == fruit_timer and len(fruit_group) < 3:
             fruit_group.add(Fruit())
 
     # draw background
@@ -102,8 +115,13 @@ while running:
     #fruit init
     fruit_group.draw(screen)
     fruit_group.update()
+    
+    if collision():
+        score += 1
 
-    collision()
+    display_score(score)
+
+   
     pygame.display.update()
 
     # limits FPS to 60
