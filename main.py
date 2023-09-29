@@ -1,10 +1,17 @@
 # Example file showing a circle moving on screen
 import pygame
-from random import randint
+from random import randint, choice
 
 #constants
 width = 1280
 height = 720
+
+# pygame setup
+pygame.init()
+screen = pygame.display.set_mode((width, height))
+clock = pygame.time.Clock()
+running = True
+dt = 0
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -45,14 +52,13 @@ class Player(pygame.sprite.Sprite):
         randomx = randint(0, width)
         self.rect.x = randomx """
 
-
     def update(self):
         self.player_input()
         self.animation_state()
         """ self.movement()
  """
 class Fruit(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, x, y):
         super().__init__()
         fruits = [
             'assets/fruits/1.png',
@@ -65,9 +71,9 @@ class Fruit(pygame.sprite.Sprite):
         ]
         self.image = pygame.image.load(fruits[randint(0, 6)]).convert_alpha()
         self.image = pygame.transform.scale(self.image, (50, 50))
-        self.rect = self.image.get_rect(midbottom=(randint(0, width), height / 4))
+        self.rect = self.image.get_rect(midbottom=(randint(x - 10, x + 10), height / 4))
         self.speed = 200
-        self.fallTime = randint(3, 5)
+        self.fallTime = randint(1, 5)
 
     def gravity(self):
         if self.fallTime > 0:
@@ -84,21 +90,60 @@ class Fruit(pygame.sprite.Sprite):
             decrement_health()
             self.kill()
 
-
-
-""" class Tree(pygame.sprite.Sprite):
-    def __init__(self):
+class Tree(pygame.sprite.Sprite):
+    def __init__(self, x,y):
         super().__init__()
         tree_n = pygame.image.load("assets/tree/1.png").convert_alpha()
         tree_s = pygame.image.load("assets/tree/2.png").convert_alpha()
         self.tree_frames = [tree_n, tree_s]
         self.tree_index = 0
         self.image = self.tree_frames[self.tree_index]
-        self.image = pygame.transform.scale(self.image, (100, height - 100))
-        self.rect = self.image.get_rect(midbottom=(, height - 100)) """
+        self.image = pygame.transform.scale(self.image, (200, height - 100))
+        self.rect = self.image.get_rect(midbottom=(x, y))
+        self.sway_time = self.randomize()
+        self.sway_flag = False
+        self.sway_duration = 2
+    
+    def randomize(self):
+        return randint(5, 7)
+
+    def animation_state(self):
+        print(self.sway_flag)
+        if self.sway_flag and self.sway_duration > 0:
+            self.sway()
+            self.sway_duration -= dt
+        elif self.sway_flag and self.sway_duration <= 0:
+            self.sway_time = self.randomize()
+            self.sway_flag = False
+            self.sway_duration = 2
+
+    def to_sway(self):
+        print(self.sway_time)
+        if self.sway_time > 0 and self.sway_flag == False:
+            self.sway_time -= dt
+            self.sway_flag = False
+            self.sway_duration = 2
+        else:
+            self.sway_flag = True
+
+    def sway(self):
+        self.tree_index += dt
+        if self.tree_index >= len(self.tree_frames):
+            self.tree_index = 0
+        self.image = self.tree_frames[int(self.tree_index)]
+        self.image = pygame.transform.scale(self.image, (200, height - 100))
+        
+
+    def update(self):
+        self.to_sway()
+        self.animation_state()
 
 score = 0
 health = 3
+
+tree1 = (100, height - 50)
+tree2 = (width/2, height - 50)
+tree3 = (width - 100, height - 50)
 
 #collision
 def collision():
@@ -122,7 +167,7 @@ hearts = [
 #health
 def decrement_health():
   global health
-  health -= 1
+  """ health -= 1 """
 
 
 def display_health():
@@ -132,12 +177,7 @@ def display_health():
     screen.blit(health_surf, health_rect)
 
 
-# pygame setup
-pygame.init()
-screen = pygame.display.set_mode((width, height))
-clock = pygame.time.Clock()
-running = True
-dt = 0
+
 
 test_font = pygame.font.Font('font/Pixeltype.ttf', 50)
 
@@ -154,6 +194,11 @@ player.add(Player())
 
 fruit_group = pygame.sprite.Group()
 
+trees = pygame.sprite.Group()
+trees.add(Tree(tree1[0], tree1[1]))
+trees.add(Tree(tree2[0], tree2[1]))
+trees.add(Tree(tree3[0], tree3[1]))
+
 """ fruit = pygame.sprite.Group()
 for i in range(randint(1, 10)):
     fruit.add(Fruit()) """
@@ -169,15 +214,18 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         if event.type == fruit_timer and len(fruit_group) < 3:
-            fruit_group.add(Fruit())
+            fruit_group.add(choice([Fruit(x=tree1[0], y=tree1[1]),
+                                    Fruit(x=tree2[0], y=tree2[1]), 
+                                    Fruit(x=tree3[0], y=tree3[1])]))
 
     # draw background
     screen.blit(skyScaled, (0, 0))
     screen.blit(groundScaled, (0, height - 100))
-    player.draw(screen)
-    player.update()
-
     
+
+    trees.draw(screen)
+    trees.update()
+
     """ fruit.draw(screen)
     fruit.update() """
 
@@ -191,18 +239,22 @@ while running:
     display_score(score)
     display_health()
 
-   
+    player.draw(screen)
+    player.update()
+
     pygame.display.update()
 
     
     # health
 
     if health <= 0:
-        running = False
+        pass
+        """ running = False """
 
     # limits FPS to 60
     # dt is delta time in seconds since last frame, used for framerate-
     # independent physics.
+    
     dt = clock.tick(60) / 1000
 
 pygame.quit()
