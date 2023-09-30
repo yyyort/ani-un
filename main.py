@@ -16,6 +16,9 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(midbottom=(width / 2, height - 80))
         self.speed = 1000
 
+    """ 
+    keyboard input
+    """
     def player_input(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a] and self.rect.x > 0:
@@ -23,6 +26,9 @@ class Player(pygame.sprite.Sprite):
         if keys[pygame.K_d] and self.rect.x < width - self.rect.width:
             self.rect.x += self.speed * dt
 
+    """ 
+    methods for animating the player
+    """
     def animation_state(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a]:
@@ -47,7 +53,7 @@ class Player(pygame.sprite.Sprite):
         """ self.movement()
  """
 class Fruit(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self, x, y, fallTime):
         super().__init__()
         fruits = [
             'assets/fruits/1.png',
@@ -58,11 +64,14 @@ class Fruit(pygame.sprite.Sprite):
             'assets/fruits/6.png',
             'assets/fruits/7.png'
         ]
+        self.scale = 0.5
         self.image = pygame.image.load(fruits[randint(0, 6)]).convert_alpha()
-        self.image = pygame.transform.scale_by(self.image, 0.5)
+        self.image = pygame.transform.scale_by(self.image, self.scale)
         self.rect = self.image.get_rect(midbottom=(randint(x - 10, x + 10), height / 4))
         self.speed = 50
-        self.fallTime = randomnum()
+        self.fallTime = fallTime
+
+        """ self.fallTime = randint(1,3) """
         self.angle = 0
 
     """ 
@@ -72,24 +81,28 @@ class Fruit(pygame.sprite.Sprite):
         if self.fallTime > 0:
             self.fallTime -= dt 
         else:
-            #self.falling_animation()
             self.rect.y += self.speed * 0.1
+
+    """ 
+    todo add spawn animation
+    fall animation 
+    """
 
     """ 
     fruit animation 
     """
-    def spawn_animation(self):
-        if self.image.get_height() <= 50 and self.image.get_width() <= 50:
-            self.image = pygame.transform.scale_by(self.image, 1.1)
+    """ def spawn_animation(self):
+        if self.scale <= 0.5:
+            self.scale += 0.01
+            self.image = pygame.transform.scale_by(self.image, self.scale)
+        else:
+            return False
+
 
     def falling_animation(self):
-            
-            if self.angle < 360:
-                self.angle += 1 * dt
-                self.image = pygame.transform.rotozoom(self.image, self.angle, 1)
-            else:
-                self.angle -= 1 * dt
-                self.image = pygame.transform.rotozoom(self.image, self.angle, 1)
+        if self.spawn_animation == False:
+            self.angle += 0 * dt
+            self.image = pygame.transform.rotate(self.image, self.angle) """
     
     def destroy(self):
         if self.rect.y > height - 100:
@@ -97,7 +110,7 @@ class Fruit(pygame.sprite.Sprite):
             self.kill()
 
     def update(self):
-        """ self.spawn_animation() """
+        #self.spawn_animation()
         self.gravity()
         self.destroy()
 
@@ -112,16 +125,17 @@ class Tree(pygame.sprite.Sprite):
         self.image = self.tree_frames[self.tree_index]
         self.image = pygame.transform.scale(self.image, (200, height - 100))
         self.rect = self.image.get_rect(midbottom=(x, y))
-        self.sway_time = randomnum()
+        self.sway_time = randint(1,2)
         self.sway_flag = False
         self.sway_duration = 2
+        
 
     """ 
     methods for adding fruit to the tree 
     """
-    def add_fruit(self):
+    """ def add_fruit(self):
         if len(fruit_group) < 3:
-            fruit_group.add(Fruit(self.rect.centerx + randint(-100,100) , self.rect.y))
+            fruit_group.add(Fruit(self.rect.centerx + randint(-100,100) , self.rect.y)) """
 
     """ 
     method to control the animation state of the tree
@@ -159,7 +173,7 @@ class Tree(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.image, (200, height - 100))
         
     def update(self):
-        self.add_fruit()
+        """ self.add_fruit() """
         self.to_sway()
         self.animation_state()
 
@@ -181,9 +195,58 @@ def collision():
     
 #score
 def display_score(score):
-    score_surf = test_font.render(f'Score: {score}', False, (64, 64, 64))
+    score_surf = pixel_font.render(f'Score: {score}', False, (64, 64, 64))
     score_rect = score_surf.get_rect(center=(width - 100, 50))
     screen.blit(score_surf, score_rect)
+
+#level
+def display_level(level):
+    level_surf = pixel_font.render(f'Level: {level}', False, (64, 64, 64))
+    level_rect = level_surf.get_rect(center=(width - 100, 100))
+    screen.blit(level_surf, level_rect)
+
+def display_time():
+    time_surf = pixel_font.render(f'Time: {int(counter)}', False, (64, 64, 64))
+    time_rect = time_surf.get_rect(center=(width - 100, 150))
+    screen.blit(time_surf, time_rect)
+
+
+""" 
+intro func
+"""
+
+#start btn
+def display_start():
+    start_surf = pixel_font.render(f'Start', False, (64, 64, 64))
+    start_rect = start_surf.get_rect(center=(width / 2, height / 2))
+    screen.blit(start_surf, start_rect)
+
+    # Check if the start button has been clicked
+    if start_rect.collidepoint(pygame.mouse.get_pos()):
+        if pygame.mouse.get_pressed()[0]:
+            return True
+
+#restart btn
+def display_restart():
+    restart_surf = pixel_font.render(f'Restart', False, (64, 64, 64))
+    restart_rect = restart_surf.get_rect(center=(width / 2, height / 2))
+    screen.blit(restart_surf, restart_rect)
+
+    # Check if the start button has been clicked
+    if restart_rect.collidepoint(pygame.mouse.get_pos()):
+        if pygame.mouse.get_pressed()[0]:
+            return True
+
+#quit
+def display_quit():
+    quit_surf = pixel_font.render(f'Quit', False, (64, 64, 64))
+    quit_rect = quit_surf.get_rect(center=(width / 2, (height / 2) + 100))
+    screen.blit(quit_surf, quit_rect)
+
+    # Check if the start button has been clicked
+    if quit_rect.collidepoint(pygame.mouse.get_pos()):
+        if pygame.mouse.get_pressed()[0]:
+            return True
 
 hearts = [
             'assets/heart1.png',
@@ -194,7 +257,7 @@ hearts = [
 #health
 def decrement_health():
   global health
-  """ health -= 1 """
+  health -= 1
 
 def display_health():
     health_surf = pygame.image.load(hearts[health - 1]).convert_alpha()
@@ -211,12 +274,15 @@ clock = pygame.time.Clock()
 running = True
 fps = 60
 dt = 0
+game_active = False
+game_over = False
 
 #constants
 score = 0
 health = 3
+level = 0
 
-test_font = pygame.font.Font('font/Pixeltype.ttf', 50)
+pixel_font = pygame.font.Font('font/Pixeltype.ttf', 50)
 
 sky = pygame.image.load("assets/Sky.png").convert()
 ground = pygame.image.load("assets/ground.png").convert()
@@ -225,25 +291,30 @@ ground = pygame.image.load("assets/ground.png").convert()
 skyScaled = pygame.transform.scale(sky, (width, height))
 groundScaled = pygame.transform.scale(ground, (width, 100))
 
+
+"""
+intro
+"""
+
+
 #class setup
 player = pygame.sprite.GroupSingle()
 player.add(Player())
 
 fruit_group = pygame.sprite.Group()
 
-tree1 = (100, height - 50)
-tree2 = (width/2, height - 50)
-tree3 = (width - 100, height - 50)
+#tree setup
+tree_list = [
+    (100, height - 50),
+    (300, height - 50),
+    (width/2, height - 50),
+    (width - 300, height - 50),
+    (width - 100, height - 50),
+]
 
 trees = pygame.sprite.Group()
-trees.add(Tree(tree1[0], tree1[1]))
-trees.add(Tree(tree2[0], tree2[1]))
-trees.add(Tree(tree3[0], tree3[1]))
-
-""" fruit = pygame.sprite.Group()
-for i in range(randint(1, 10)):
-    fruit.add(Fruit()) """
-
+for tree in tree_list:
+    trees.add(Tree(tree[0], tree[1]))
 
 """ 
 user events
@@ -252,49 +323,142 @@ user events
 fruit_timer = pygame.USEREVENT + 1
 pygame.time.set_timer(fruit_timer, 2000)
 
+#time
+time_test = pygame.time.get_ticks()
+counter = 0
+timer = 0
+
+#levels
+fruit_spawn = 2
+fruit_fall_speed = 1
+
 while running:
     # poll for events
     # pygame.QUIT event means the user clicked X to close your window
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        """ if event.type == fruit_timer and len(fruit_group) < 3:
+
+        """ 
+        spawn randomly
+        """    
+        """ if event.type == fruit_timer and len(fruit_group) < fruit_spawn:
+            fruit_group.add(Fruit(x = randint(0, width), y = height / 4)) """
+
+        """ 
+        uncomment if fruit spawn is in the tree 
+        """
+        """ if event.type == fruit_timer and len(fruit_group) < fruit_spawn:
             fruit_group.add(choice([Fruit(x=tree1[0], y=tree1[1]),
                                     Fruit(x=tree2[0], y=tree2[1]), 
                                     Fruit(x=tree3[0], y=tree3[1])])) """
+        if event.type == fruit_timer and len(fruit_group) < fruit_spawn:
+            fruit_group.add(choice([Fruit(x=tree.rect.centerx, y=100, fallTime=tree.sway_time) for tree in trees]))
 
-    # draw background
-    screen.blit(skyScaled, (0, 0))
-    screen.blit(groundScaled, (0, height - 100))
+    if game_active:
+        tick = pygame.time.get_ticks()
+        if tick - time_test >= 1000:
+            timer += 1
+            counter += 1
+            time_test = tick
+        
+        if counter >= 60:
+            level += 1
+            fruit_spawn += 1
+            counter = 0
 
-    trees.draw(screen)
-    trees.update()
+        start_time = int(pygame.time.get_ticks() / 1000)
 
-    #fruit init
-    fruit_group.draw(screen)
-    fruit_group.update()
-    
-    if collision():
-        score += 1
+        # draw background
+        screen.blit(skyScaled, (0, 0))
+        screen.blit(groundScaled, (0, height - 100))
 
-    display_score(score)
-    display_health()
+        trees.draw(screen)
+        trees.update()
 
-    player.draw(screen)
-    player.update()
+        #fruit init
+        fruit_group.draw(screen)
+        fruit_group.update()
+        
+        if collision():
+            score += 1
 
-    pygame.display.update()
+        display_score(score)
+        display_health()
+        display_level(level)
+        display_time()
 
-    
-    # health
+        player.draw(screen)
+        player.update()
 
-    if health <= 0:
-        running = False
+        pygame.display.update()
+
+        
+        # health
+        if health <= 0:
+            game_over = True
+            game_active = False
+            health = 3
+            score = 0
+            level = 0
+            counter = 0
+            fruit_group.remove(fruit_group.sprites())
+           
+    elif game_active == False and game_over == False:
+        """
+        intro screen 
+        """
+        # draw background
+        screen.blit(skyScaled, (0, 0))
+        screen.blit(groundScaled, (0, height - 100))
+
+        trees.draw(screen)
+
+        player.draw(screen)
+
+        if display_start():
+            game_active = True
+        
+        if display_quit():
+            quit()
+
+        pygame.display.update()
+    else:
+        """ 
+        game over screen 
+        """
+        tick = pygame.time.get_ticks()
+        if tick - time_test >= 1000:
+            counter += 1
+            time_test = tick
+        start_time = int(pygame.time.get_ticks() / 1000)
+        game_start = clock.get_time()
+        # draw background
+        screen.blit(skyScaled, (0, 0))
+        screen.blit(groundScaled, (0, height - 100))
+
+        trees.draw(screen)
+
+        player.draw(screen)
+
+        if display_restart():
+            game_active = True
+            game_over = False
+            health = 3
+            score = 0
+            level = 0
+            counter = 0
+            fruit_group.remove(fruit_group.sprites())
+
+        if display_quit():
+            quit()
+
+        pygame.display.update()
 
     # limits FPS to 60
     # dt is delta time in seconds since last frame, used for framerate-
     # independent physics.
     clock.tick(fps)
-    dt = clock.tick(fps) / 1000
+    dt = clock.tick(60) / 1000
 
 pygame.quit()
