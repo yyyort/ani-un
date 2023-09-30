@@ -16,6 +16,9 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(midbottom=(width / 2, height - 80))
         self.speed = 1000
 
+    """ 
+    keyboard input
+    """
     def player_input(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a] and self.rect.x > 0:
@@ -23,6 +26,9 @@ class Player(pygame.sprite.Sprite):
         if keys[pygame.K_d] and self.rect.x < width - self.rect.width:
             self.rect.x += self.speed * dt
 
+    """ 
+    methods for animating the player
+    """
     def animation_state(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a]:
@@ -76,6 +82,11 @@ class Fruit(pygame.sprite.Sprite):
             self.fallTime -= dt 
         else:
             self.rect.y += self.speed * 0.1
+
+    """ 
+    todo add spawn animation
+    fall animation 
+    """
 
     """ 
     fruit animation 
@@ -293,19 +304,17 @@ player.add(Player())
 fruit_group = pygame.sprite.Group()
 
 #tree setup
-tree1 = (100, height - 50)
-tree2 = (300, height - 50)
-tree3 = (width/2, height - 50)
-tree4 = (width - 300, height - 50)
-tree5 = (width - 100, height - 50)
-
+tree_list = [
+    (100, height - 50),
+    (300, height - 50),
+    (width/2, height - 50),
+    (width - 300, height - 50),
+    (width - 100, height - 50),
+]
 
 trees = pygame.sprite.Group()
-trees.add(Tree(tree1[0], tree1[1]))
-trees.add(Tree(tree2[0], tree2[1]))
-trees.add(Tree(tree3[0], tree3[1]))
-trees.add(Tree(tree4[0], tree4[1]))
-trees.add(Tree(tree5[0], tree5[1]))
+for tree in tree_list:
+    trees.add(Tree(tree[0], tree[1]))
 
 """ 
 user events
@@ -346,9 +355,6 @@ while running:
         if event.type == fruit_timer and len(fruit_group) < fruit_spawn:
             fruit_group.add(choice([Fruit(x=tree.rect.centerx, y=100, fallTime=tree.sway_time) for tree in trees]))
 
-        
-        
-            
     if game_active:
         tick = pygame.time.get_ticks()
         if tick - time_test >= 1000:
@@ -443,7 +449,6 @@ while running:
             level = 0
             counter = 0
             fruit_group.remove(fruit_group.sprites())
-
 
         if display_quit():
             quit()
