@@ -119,9 +119,9 @@ class Tree(pygame.sprite.Sprite):
     """ 
     methods for adding fruit to the tree 
     """
-    def add_fruit(self):
+    """ def add_fruit(self):
         if len(fruit_group) < 3:
-            fruit_group.add(Fruit(self.rect.centerx + randint(-100,100) , self.rect.y))
+            fruit_group.add(Fruit(self.rect.centerx + randint(-100,100) , self.rect.y)) """
 
     """ 
     method to control the animation state of the tree
@@ -159,7 +159,7 @@ class Tree(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.image, (200, height - 100))
         
     def update(self):
-        self.add_fruit()
+        """ self.add_fruit() """
         self.to_sway()
         self.animation_state()
 
@@ -181,9 +181,58 @@ def collision():
     
 #score
 def display_score(score):
-    score_surf = test_font.render(f'Score: {score}', False, (64, 64, 64))
+    score_surf = pixel_font.render(f'Score: {score}', False, (64, 64, 64))
     score_rect = score_surf.get_rect(center=(width - 100, 50))
     screen.blit(score_surf, score_rect)
+
+#level
+def display_level(level):
+    level_surf = pixel_font.render(f'Level: {level}', False, (64, 64, 64))
+    level_rect = level_surf.get_rect(center=(width - 100, 100))
+    screen.blit(level_surf, level_rect)
+
+def display_time():
+    time_surf = pixel_font.render(f'Time: {int(counter)}', False, (64, 64, 64))
+    time_rect = time_surf.get_rect(center=(width - 100, 150))
+    screen.blit(time_surf, time_rect)
+
+
+""" 
+intro func
+"""
+
+#start btn
+def display_start():
+    start_surf = pixel_font.render(f'Start', False, (64, 64, 64))
+    start_rect = start_surf.get_rect(center=(width / 2, height / 2))
+    screen.blit(start_surf, start_rect)
+
+    # Check if the start button has been clicked
+    if start_rect.collidepoint(pygame.mouse.get_pos()):
+        if pygame.mouse.get_pressed()[0]:
+            return True
+
+#restart btn
+def display_restart():
+    restart_surf = pixel_font.render(f'Restart', False, (64, 64, 64))
+    restart_rect = restart_surf.get_rect(center=(width / 2, height / 2))
+    screen.blit(restart_surf, restart_rect)
+
+    # Check if the start button has been clicked
+    if restart_rect.collidepoint(pygame.mouse.get_pos()):
+        if pygame.mouse.get_pressed()[0]:
+            return True
+
+#quit
+def display_quit():
+    quit_surf = pixel_font.render(f'Quit', False, (64, 64, 64))
+    quit_rect = quit_surf.get_rect(center=(width / 2, (height / 2) + 100))
+    screen.blit(quit_surf, quit_rect)
+
+    # Check if the start button has been clicked
+    if quit_rect.collidepoint(pygame.mouse.get_pos()):
+        if pygame.mouse.get_pressed()[0]:
+            return True
 
 hearts = [
             'assets/heart1.png',
@@ -194,7 +243,7 @@ hearts = [
 #health
 def decrement_health():
   global health
-  """ health -= 1 """
+  health -= 1
 
 def display_health():
     health_surf = pygame.image.load(hearts[health - 1]).convert_alpha()
@@ -211,12 +260,15 @@ clock = pygame.time.Clock()
 running = True
 fps = 60
 dt = 0
+game_active = False
+game_over = False
 
 #constants
 score = 0
 health = 3
+level = 0
 
-test_font = pygame.font.Font('font/Pixeltype.ttf', 50)
+pixel_font = pygame.font.Font('font/Pixeltype.ttf', 50)
 
 sky = pygame.image.load("assets/Sky.png").convert()
 ground = pygame.image.load("assets/ground.png").convert()
@@ -224,6 +276,12 @@ ground = pygame.image.load("assets/ground.png").convert()
 
 skyScaled = pygame.transform.scale(sky, (width, height))
 groundScaled = pygame.transform.scale(ground, (width, 100))
+
+
+"""
+intro
+"""
+
 
 #class setup
 player = pygame.sprite.GroupSingle()
@@ -240,17 +298,16 @@ trees.add(Tree(tree1[0], tree1[1]))
 trees.add(Tree(tree2[0], tree2[1]))
 trees.add(Tree(tree3[0], tree3[1]))
 
-""" fruit = pygame.sprite.Group()
-for i in range(randint(1, 10)):
-    fruit.add(Fruit()) """
-
-
 """ 
 user events
 """
 # timer
 fruit_timer = pygame.USEREVENT + 1
-pygame.time.set_timer(fruit_timer, 2000)
+pygame.time.set_timer(fruit_timer, 1000)
+
+time_test = pygame.time.get_ticks()
+counter = 0
+timer = 0
 
 while running:
     # poll for events
@@ -258,43 +315,107 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        """ if event.type == fruit_timer and len(fruit_group) < 3:
+        if event.type == fruit_timer and len(fruit_group) < 3:
             fruit_group.add(choice([Fruit(x=tree1[0], y=tree1[1]),
                                     Fruit(x=tree2[0], y=tree2[1]), 
-                                    Fruit(x=tree3[0], y=tree3[1])])) """
+                                    Fruit(x=tree3[0], y=tree3[1])]))
+            
+    if game_active:
+        tick = pygame.time.get_ticks()
+        if tick - time_test >= 1000:
+            timer += 1
+            counter += 1
+            time_test = tick
+        
+        if counter >= 10:
+            level += 1
+            counter = 0
 
-    # draw background
-    screen.blit(skyScaled, (0, 0))
-    screen.blit(groundScaled, (0, height - 100))
+        start_time = int(pygame.time.get_ticks() / 1000)
 
-    trees.draw(screen)
-    trees.update()
+        # draw background
+        screen.blit(skyScaled, (0, 0))
+        screen.blit(groundScaled, (0, height - 100))
 
-    #fruit init
-    fruit_group.draw(screen)
-    fruit_group.update()
-    
-    if collision():
-        score += 1
+        trees.draw(screen)
+        trees.update()
 
-    display_score(score)
-    display_health()
+        #fruit init
+        fruit_group.draw(screen)
+        fruit_group.update()
+        
+        if collision():
+            score += 1
 
-    player.draw(screen)
-    player.update()
+        display_score(score)
+        display_health()
+        display_level(level)
+        display_time()
 
-    pygame.display.update()
+        player.draw(screen)
+        player.update()
 
-    
-    # health
+        pygame.display.update()
 
-    if health <= 0:
-        running = False
+        
+        # health
+        if health <= 0:
+            game_over = True
+            game_active = False
+            health = 3
+            score = 0
+            level = 0
+            counter = 0
+           
+    elif game_active == False and game_over == False:
+        # draw background
+        screen.blit(skyScaled, (0, 0))
+        screen.blit(groundScaled, (0, height - 100))
+
+        trees.draw(screen)
+
+        player.draw(screen)
+
+        if display_start():
+            game_active = True
+        
+        if display_quit():
+            quit()
+
+        pygame.display.update()
+    else:
+        tick = pygame.time.get_ticks()
+        if tick - time_test >= 1000:
+            counter += 1
+            time_test = tick
+        start_time = int(pygame.time.get_ticks() / 1000)
+        game_start = clock.get_time()
+        # draw background
+        screen.blit(skyScaled, (0, 0))
+        screen.blit(groundScaled, (0, height - 100))
+
+        trees.draw(screen)
+
+        player.draw(screen)
+
+        if display_restart():
+            game_active = True
+            game_over = False
+            health = 3
+            score = 0
+            level = 0
+            counter = 0
+
+
+        if display_quit():
+            quit()
+
+        pygame.display.update()
 
     # limits FPS to 60
     # dt is delta time in seconds since last frame, used for framerate-
     # independent physics.
     clock.tick(fps)
-    dt = clock.tick(fps) / 1000
+    dt = clock.tick(60) / 1000
 
 pygame.quit()
