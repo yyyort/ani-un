@@ -47,7 +47,7 @@ class Player(pygame.sprite.Sprite):
         """ self.movement()
  """
 class Fruit(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self, x, y, fallTime):
         super().__init__()
         fruits = [
             'assets/fruits/1.png',
@@ -62,7 +62,9 @@ class Fruit(pygame.sprite.Sprite):
         self.image = pygame.transform.scale_by(self.image, 0.5)
         self.rect = self.image.get_rect(midbottom=(randint(x - 10, x + 10), height / 4))
         self.speed = 50
-        self.fallTime = randint(1,3)
+        self.fallTime = fallTime
+
+        """ self.fallTime = randint(1,3) """
         self.angle = 0
 
     """ 
@@ -112,9 +114,10 @@ class Tree(pygame.sprite.Sprite):
         self.image = self.tree_frames[self.tree_index]
         self.image = pygame.transform.scale(self.image, (200, height - 100))
         self.rect = self.image.get_rect(midbottom=(x, y))
-        self.sway_time = randomnum()
+        self.sway_time = randint(1,2)
         self.sway_flag = False
         self.sway_duration = 2
+        
 
     """ 
     methods for adding fruit to the tree 
@@ -289,14 +292,20 @@ player.add(Player())
 
 fruit_group = pygame.sprite.Group()
 
+#tree setup
 tree1 = (100, height - 50)
-tree2 = (width/2, height - 50)
-tree3 = (width - 100, height - 50)
+tree2 = (300, height - 50)
+tree3 = (width/2, height - 50)
+tree4 = (width - 300, height - 50)
+tree5 = (width - 100, height - 50)
+
 
 trees = pygame.sprite.Group()
 trees.add(Tree(tree1[0], tree1[1]))
 trees.add(Tree(tree2[0], tree2[1]))
 trees.add(Tree(tree3[0], tree3[1]))
+trees.add(Tree(tree4[0], tree4[1]))
+trees.add(Tree(tree5[0], tree5[1]))
 
 """ 
 user events
@@ -311,7 +320,7 @@ counter = 0
 timer = 0
 
 #levels
-fruit_spawn = 3
+fruit_spawn = 2
 fruit_fall_speed = 1
 
 while running:
@@ -320,8 +329,12 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        if event.type == fruit_timer and len(fruit_group) < fruit_spawn:
-            fruit_group.add(Fruit(x = randint(0, width), y = height / 4))
+
+        """ 
+        spawn randomly
+        """    
+        """ if event.type == fruit_timer and len(fruit_group) < fruit_spawn:
+            fruit_group.add(Fruit(x = randint(0, width), y = height / 4)) """
 
         """ 
         uncomment if fruit spawn is in the tree 
@@ -330,6 +343,11 @@ while running:
             fruit_group.add(choice([Fruit(x=tree1[0], y=tree1[1]),
                                     Fruit(x=tree2[0], y=tree2[1]), 
                                     Fruit(x=tree3[0], y=tree3[1])])) """
+        if event.type == fruit_timer and len(fruit_group) < fruit_spawn:
+            fruit_group.add(choice([Fruit(x=tree.rect.centerx, y=100, fallTime=tree.sway_time) for tree in trees]))
+
+        
+        
             
     if game_active:
         tick = pygame.time.get_ticks()
@@ -338,7 +356,7 @@ while running:
             counter += 1
             time_test = tick
         
-        if counter >= 10:
+        if counter >= 60:
             level += 1
             fruit_spawn += 1
             counter = 0
