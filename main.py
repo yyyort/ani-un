@@ -58,8 +58,9 @@ class Fruit(pygame.sprite.Sprite):
             'assets/fruits/6.png',
             'assets/fruits/7.png'
         ]
+        self.scale = 0.5
         self.image = pygame.image.load(fruits[randint(0, 6)]).convert_alpha()
-        self.image = pygame.transform.scale_by(self.image, 0.5)
+        self.image = pygame.transform.scale_by(self.image, self.scale)
         self.rect = self.image.get_rect(midbottom=(randint(x - 10, x + 10), height / 4))
         self.speed = 50
         self.fallTime = fallTime
@@ -74,24 +75,23 @@ class Fruit(pygame.sprite.Sprite):
         if self.fallTime > 0:
             self.fallTime -= dt 
         else:
-            #self.falling_animation()
             self.rect.y += self.speed * 0.1
 
     """ 
     fruit animation 
     """
-    def spawn_animation(self):
-        if self.image.get_height() <= 50 and self.image.get_width() <= 50:
-            self.image = pygame.transform.scale_by(self.image, 1.1)
+    """ def spawn_animation(self):
+        if self.scale <= 0.5:
+            self.scale += 0.01
+            self.image = pygame.transform.scale_by(self.image, self.scale)
+        else:
+            return False
+
 
     def falling_animation(self):
-            
-            if self.angle < 360:
-                self.angle += 1 * dt
-                self.image = pygame.transform.rotozoom(self.image, self.angle, 1)
-            else:
-                self.angle -= 1 * dt
-                self.image = pygame.transform.rotozoom(self.image, self.angle, 1)
+        if self.spawn_animation == False:
+            self.angle += 0 * dt
+            self.image = pygame.transform.rotate(self.image, self.angle) """
     
     def destroy(self):
         if self.rect.y > height - 100:
@@ -99,7 +99,7 @@ class Fruit(pygame.sprite.Sprite):
             self.kill()
 
     def update(self):
-        """ self.spawn_animation() """
+        #self.spawn_animation()
         self.gravity()
         self.destroy()
 
@@ -399,6 +399,9 @@ while running:
             fruit_group.remove(fruit_group.sprites())
            
     elif game_active == False and game_over == False:
+        """
+        intro screen 
+        """
         # draw background
         screen.blit(skyScaled, (0, 0))
         screen.blit(groundScaled, (0, height - 100))
@@ -415,6 +418,9 @@ while running:
 
         pygame.display.update()
     else:
+        """ 
+        game over screen 
+        """
         tick = pygame.time.get_ticks()
         if tick - time_test >= 1000:
             counter += 1
