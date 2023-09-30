@@ -62,7 +62,7 @@ class Fruit(pygame.sprite.Sprite):
         self.image = pygame.transform.scale_by(self.image, 0.5)
         self.rect = self.image.get_rect(midbottom=(randint(x - 10, x + 10), height / 4))
         self.speed = 50
-        self.fallTime = randomnum()
+        self.fallTime = randint(1,3)
         self.angle = 0
 
     """ 
@@ -303,11 +303,16 @@ user events
 """
 # timer
 fruit_timer = pygame.USEREVENT + 1
-pygame.time.set_timer(fruit_timer, 1000)
+pygame.time.set_timer(fruit_timer, 2000)
 
+#time
 time_test = pygame.time.get_ticks()
 counter = 0
 timer = 0
+
+#levels
+fruit_spawn = 3
+fruit_fall_speed = 1
 
 while running:
     # poll for events
@@ -315,10 +320,16 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        if event.type == fruit_timer and len(fruit_group) < 3:
+        if event.type == fruit_timer and len(fruit_group) < fruit_spawn:
+            fruit_group.add(Fruit(x = randint(0, width), y = height / 4))
+
+        """ 
+        uncomment if fruit spawn is in the tree 
+        """
+        """ if event.type == fruit_timer and len(fruit_group) < fruit_spawn:
             fruit_group.add(choice([Fruit(x=tree1[0], y=tree1[1]),
                                     Fruit(x=tree2[0], y=tree2[1]), 
-                                    Fruit(x=tree3[0], y=tree3[1])]))
+                                    Fruit(x=tree3[0], y=tree3[1])])) """
             
     if game_active:
         tick = pygame.time.get_ticks()
@@ -329,6 +340,7 @@ while running:
         
         if counter >= 10:
             level += 1
+            fruit_spawn += 1
             counter = 0
 
         start_time = int(pygame.time.get_ticks() / 1000)
@@ -366,6 +378,7 @@ while running:
             score = 0
             level = 0
             counter = 0
+            fruit_group.remove(fruit_group.sprites())
            
     elif game_active == False and game_over == False:
         # draw background
@@ -405,6 +418,7 @@ while running:
             score = 0
             level = 0
             counter = 0
+            fruit_group.remove(fruit_group.sprites())
 
 
         if display_quit():
