@@ -5,9 +5,9 @@ from random import randint, choice
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()  
-        player_f = pygame.image.load("assets/player.png").convert_alpha()
-        player_lf = pygame.image.load("assets/player-l.png").convert_alpha()
-        self.player_frames = [player_f, player_lf]
+        player_f = pygame.image.load("assets/player/farmer.png").convert_alpha()
+        player_s = pygame.image.load("assets/player/farmer.png").convert_alpha()
+        self.player_frames = [player_f, player_s]
         self.player_index = 0
         self.image = self.player_frames[self.player_index]
         self.image = pygame.transform.scale(self.image, (100, 100))
@@ -35,13 +35,16 @@ class Player(pygame.sprite.Sprite):
             self.player_index = 1
             self.image = self.player_frames[self.player_index]
             self.image = pygame.transform.flip(self.image, True, False)
+            self.image = pygame.transform.scale(self.image, (100, 100))
         elif keys[pygame.K_d]:
             self.player_index = 1
             self.image = self.player_frames[self.player_index]
+            self.image = pygame.transform.scale(self.image, (100, 100))
         else:
             self.player_index = 0
             self.image = self.player_frames[self.player_index]
             self.image = pygame.transform.scale(self.image, (100, 100))
+
 
     """ def movement(self):
         randomx = randint(0, width)
@@ -56,17 +59,15 @@ class Fruit(pygame.sprite.Sprite):
     def __init__(self, x, y, fallTime):
         super().__init__()
         fruits = [
-            'assets/fruits/1.png',
-            'assets/fruits/2.png',
-            'assets/fruits/3.png',
-            'assets/fruits/4.png',
-            'assets/fruits/5.png',
-            'assets/fruits/6.png',
-            'assets/fruits/7.png'
+            'assets/fruits/apple.png',
+            'assets/fruits/cherry-pie.png',
+            'assets/fruits/mango.png',
+            'assets/fruits/orange.png',
+            'assets/fruits/pear.png',
         ]
-        self.scale = 0.5
-        self.image = pygame.image.load(fruits[randint(0, 6)]).convert_alpha()
-        self.image = pygame.transform.scale_by(self.image, self.scale)
+        self.scale = (50, 50)
+        self.image = pygame.image.load(fruits[randint(0, len(fruits)-1)]).convert_alpha()
+        self.image = pygame.transform.scale(self.image, self.scale)
         self.rect = self.image.get_rect(midbottom=(randint(x - 10, x + 10), height / 4))
         self.speed = 50
         self.fallTime = fallTime
@@ -125,7 +126,7 @@ class Tree(pygame.sprite.Sprite):
         self.image = self.tree_frames[self.tree_index]
         self.image = pygame.transform.scale(self.image, (200, height - 100))
         self.rect = self.image.get_rect(midbottom=(x, y))
-        self.sway_time = randint(1,2)
+        self.sway_time = randint(0,1)
         self.sway_flag = False
         self.sway_duration = 2
         
