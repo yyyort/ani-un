@@ -2,6 +2,20 @@
 import pygame
 from random import randint, choice
 
+#comvis
+import mediapipe as mp
+from mediapipe.tasks import python
+from mediapipe.tasks.python import vision
+import numpy as np
+import cv2
+
+#setup mediapipe instance
+mp_drawing = mp.solutions.drawing_utils
+mp_drawing_styles = mp.solutions.drawing_styles
+mp_pose = mp.solutions.pose
+
+cap = cv2.VideoCapture(0)
+
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()  
@@ -15,6 +29,9 @@ class Player(pygame.sprite.Sprite):
         #self.image = pygame.transform.scale(self.image, (100, 100))
         self.rect = self.image.get_rect(midbottom=(width / 2, height - 80))
         self.speed = 1000
+
+    def comvis_input(self, x):
+        self.rect.x = x
 
     """ 
     keyboard input
@@ -50,7 +67,8 @@ class Player(pygame.sprite.Sprite):
         randomx = randint(0, width)
         self.rect.x = randomx """
 
-    def update(self):
+    def update(self, x = 500):
+        self.comvis_input(x)
         self.player_input()
         self.animation_state()
         """ self.movement()
@@ -333,7 +351,38 @@ timer = 0
 fruit_spawn = 2
 fruit_fall_speed = 1
 
-while running:
+
+with mp_pose.Pose(
+    min_detection_confidence=0.5,
+    min_tracking_confidence=0.5) as pose:
+  
+  while cap.isOpened() and running:
+    success, image = cap.read()
+    if not success:
+      print("Ignoring empty camera frame.")
+      continue
+
+   
+    image.flags.writeable = False
+    image = cv2.flip(image,1)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    results = pose.process(image)
+
+    image.flags.writeable = True
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+
+    mp_drawing.draw_landmarks(
+        image,
+        results.pose_landmarks,
+        mp_pose.POSE_CONNECTIONS,
+        landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style()
+        )
+    
+    cv2.imshow('MediaPipe Pose',image)
+
+    if cv2.waitKey(5) & 0xFF == 27:
+      break
+
     # poll for events
     # pygame.QUIT event means the user clicked X to close your window
     for event in pygame.event.get():
@@ -389,8 +438,19 @@ while running:
         display_level(level)
         display_time()
 
-        player.draw(screen)
-        player.update()
+        if results.pose_landmarks is not None:
+            nose_x = results.pose_landmarks.landmark[mp_pose.PoseLandmark.NOSE].x
+            nose_x_flipped = nose_x
+            #how to flip the x coordinate?
+            #a: use cv2.flip()
+            #move player comvis
+            print(nose_x_flipped)
+            player.update(nose_x_flipped * width)
+            player.draw(screen)
+        else:
+            print("No person detected.")
+
+        
 
         pygame.display.update()
 
