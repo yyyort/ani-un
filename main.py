@@ -15,10 +15,12 @@ mp_drawing_styles = mp.solutions.drawing_styles
 mp_pose = mp.solutions.pose
 
 #dynamic setup
-width = 1280 /2 
-height = 720 /2
-""" width = 1920 /3
-height = 1080 /3 """
+
+""" width = 1280 
+height = 720  """
+width = 640
+height = 640
+
 ground_y = int(height - ((height * 13.81) / 100)) # height - 100
 player_x = int((width * 7.81) / 100) # 100
 player_y = int((height * 13.89) / 100) # 100
@@ -291,7 +293,8 @@ def display_start():
 
 #restart btn
 def display_restart():
-    restart_surf = pixel_font.render(f'Restart', False, (64, 64, 64))
+    restart_font = pygame.font.Font('font/Pixeltype.ttf', scale_x_150)
+    restart_surf = restart_font.render(f'Restart', False, (64, 64, 64))
     restart_rect = restart_surf.get_rect(center=(width / 2, height / 2))
     screen.blit(restart_surf, restart_rect)
 
