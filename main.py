@@ -31,7 +31,8 @@ class Player(pygame.sprite.Sprite):
         self.speed = 1000
 
     def comvis_input(self, x):
-        self.rect.x = x
+        if x > 0 and x < width:
+            self.rect.x = x
 
     """ 
     keyboard input
@@ -137,9 +138,10 @@ class Fruit(pygame.sprite.Sprite):
 class Tree(pygame.sprite.Sprite):
     def __init__(self, x,y):
         super().__init__()
-        tree_n = pygame.image.load("assets/tree/1.png").convert_alpha()
-        tree_s = pygame.image.load("assets/tree/2.png").convert_alpha()
-        self.tree_frames = [tree_n, tree_s]
+        tree_n = pygame.image.load("assets/tree/tree.png").convert_alpha()
+        tree_s = pygame.image.load("assets/tree/tree-slant.png").convert_alpha()
+        tree_s2 = pygame.image.load("assets/tree/tree-slant2.png").convert_alpha()
+        self.tree_frames = [tree_n, tree_s, tree_s2]
         self.tree_index = 0
         self.image = self.tree_frames[self.tree_index]
         self.image = pygame.transform.scale(self.image, (200, height - 100))
@@ -244,6 +246,11 @@ def display_start():
     if start_rect.collidepoint(pygame.mouse.get_pos()):
         if pygame.mouse.get_pressed()[0]:
             return True
+        
+    if start_rect.collidepoint(mouse_rect.centerx, mouse_rect.centery):
+        start_surf = pixel_font.render(f'Start', False, (255, 255, 255), (64, 64, 64))
+        return True
+
 
 #restart btn
 def display_restart():
@@ -255,6 +262,10 @@ def display_restart():
     if restart_rect.collidepoint(pygame.mouse.get_pos()):
         if pygame.mouse.get_pressed()[0]:
             return True
+    
+    if restart_rect.collidepoint(mouse_rect.centerx, mouse_rect.centery):
+        restart_rect = pixel_font.render(f'Start', False, (255, 255, 255), (64, 64, 64))
+        return True
 
 #quit
 def display_quit():
@@ -279,14 +290,20 @@ def decrement_health():
   health -= 1
 
 def display_health():
-    health_surf = pygame.image.load(hearts[health - 1]).convert_alpha()
+    for index in range(health):
+        health_surf = pygame.image.load('assets/heart.png').convert_alpha()
+        health_surf = pygame.transform.scale(health_surf, (50, 50))
+        health_rect = health_surf.get_rect(center=((50 + index * 50), 50))
+        screen.blit(health_surf, health_rect)
+
+    """ health_surf = pygame.image.load(hearts[health - 1]).convert_alpha()
     health_surf = pygame.transform.scale(health_surf, (300, 50))
     health_rect = health_surf.get_rect(center=(300, 50))
     screen.blit(health_surf, health_rect)
-
+ """
 # pygame setup
-width = 1280
-height = 720
+width = 1280 
+height = 720 
 pygame.init()
 screen = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
@@ -310,6 +327,12 @@ ground = pygame.image.load("assets/ground.png").convert()
 skyScaled = pygame.transform.scale(sky, (width, height))
 groundScaled = pygame.transform.scale(ground, (width, 100))
 
+background = pygame.image.load("assets/background.png").convert()
+background = pygame.transform.scale(background, (width, height))
+
+mouse = pygame.image.load("assets/mouse.png").convert_alpha()
+mouse = pygame.transform.scale(mouse, (50, 50))
+mouse_rect = mouse.get_rect(center=(-100, -100))
 
 """
 intro
@@ -356,7 +379,8 @@ with mp_pose.Pose(
     min_detection_confidence=0.5,
     min_tracking_confidence=0.5) as pose:
   
-  while cap.isOpened() and running:
+  
+  while cap.isOpened() and running: 
     success, image = cap.read()
     if not success:
       print("Ignoring empty camera frame.")
@@ -420,8 +444,9 @@ with mp_pose.Pose(
         start_time = int(pygame.time.get_ticks() / 1000)
 
         # draw background
-        screen.blit(skyScaled, (0, 0))
-        screen.blit(groundScaled, (0, height - 100))
+        screen.blit(background, (0, 0, width, height))
+        #screen.blit(skyScaled, (0, 0))
+        #screen.blit(groundScaled, (0, height - 100))
 
         trees.draw(screen)
         trees.update()
@@ -469,21 +494,34 @@ with mp_pose.Pose(
         """
         intro screen 
         """
+
         # draw background
-        screen.blit(skyScaled, (0, 0))
-        screen.blit(groundScaled, (0, height - 100))
+        screen.blit(background, (0, 0, width, height))
+        """ screen.blit(skyScaled, (0, 0))
+        screen.blit(groundScaled, (0, height - 100)) """
 
         trees.draw(screen)
 
         player.draw(screen)
 
+        
+
         if display_start():
             game_active = True
         
-        if display_quit():
-            quit()
+        if results.pose_landmarks is not None:
+            r_index_x = results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_INDEX].x
+            r_index_y = results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_INDEX].y
+            
+            mouse_rect.centerx = (r_index_x * width)
+            mouse_rect.centery = (r_index_y * height)
+            screen.blit(mouse, (r_index_x * width, r_index_y * height))
+            
+        else:
+            print("No person detected.")
 
         pygame.display.update()
+
     else:
         """ 
         game over screen 
@@ -495,8 +533,9 @@ with mp_pose.Pose(
         start_time = int(pygame.time.get_ticks() / 1000)
         game_start = clock.get_time()
         # draw background
-        screen.blit(skyScaled, (0, 0))
-        screen.blit(groundScaled, (0, height - 100))
+        screen.blit(background, (0, 0, width, height))
+        """ screen.blit(skyScaled, (0, 0))
+        screen.blit(groundScaled, (0, height - 100)) """
 
         trees.draw(screen)
 
@@ -511,8 +550,16 @@ with mp_pose.Pose(
             counter = 0
             fruit_group.remove(fruit_group.sprites())
 
-        if display_quit():
-            quit()
+        if results.pose_landmarks is not None:
+            r_index_x = results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_INDEX].x
+            r_index_y = results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_INDEX].y
+            
+            mouse_rect.centerx = (r_index_x * width)
+            mouse_rect.centery = (r_index_y * height)
+            screen.blit(mouse, (r_index_x * width, r_index_y * height))
+            
+        else:
+            print("No person detected.")
 
         pygame.display.update()
 
