@@ -15,9 +15,6 @@ mp_drawing_styles = mp.solutions.drawing_styles
 mp_pose = mp.solutions.pose
 
 #dynamic setup
-
-""" width = 1280 
-height = 720  """
 width = 640
 height = 640
 
@@ -603,3 +600,5 @@ with mp_pose.Pose(
     dt = clock.tick(60) / 1000
 
 pygame.quit()
+cap.release()
+cv2.destroyAllWindows()
