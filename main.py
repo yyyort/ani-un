@@ -16,11 +16,11 @@ mp_pose = mp.solutions.pose
 
 #dynamic setup
 
-""" width = 1280 
-height = 720  """
-width = 640
-height = 640
-
+width = 1366 
+height = 768 
+""" width = 1920
+height = 1080
+ """
 ground_y = int(height - ((height * 13.81) / 100)) # height - 100
 player_x = int((width * 7.81) / 100) # 100
 player_y = int((height * 13.89) / 100) # 100
@@ -43,7 +43,8 @@ scale_y_200 = int((height * 27.78) / 100) # 200
 
 # pygame setup
 pygame.init()
-screen = pygame.display.set_mode((width, height))
+#screen = pygame.display.set_mode((width, height))
+screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 clock = pygame.time.Clock()
 running = True
 fps = 60
@@ -261,7 +262,7 @@ def display_score(score):
 #level
 def display_level(level):
     level_surf = pixel_font.render(f'Level: {level}', False, (64, 64, 64))
-    level_rect = level_surf.get_rect(center=(width - scale_x_100, scale_x_100))
+    level_rect = level_surf.get_rect(center=(width - scale_x_100, scale_y_100))
     screen.blit(level_surf, level_rect)
 
 def display_time():
