@@ -13,9 +13,17 @@ mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_pose = mp.solutions.pose
 
+from screeninfo import get_monitors
+
+monitor = get_monitors()
+
 #dynamic setup
-width = 1366
-height = 768
+width = monitor[0].width
+height = monitor[0].height
+
+#static setup
+""" width = 1366
+height = 768 """
 
 ground_y = int(height - ((height * 13.81) / 100)) # height - 100
 player_x = int((width * 7.81) / 100) # 100
