@@ -1,21 +1,75 @@
-# Example file showing a circle moving on screen
 import pygame
 from random import randint, choice
+
+#comvis
+import mediapipe as mp
+from mediapipe.tasks import python
+from mediapipe.tasks.python import vision
+import numpy as np
+import cv2
+
+#setup mediapipe instance
+mp_drawing = mp.solutions.drawing_utils
+mp_drawing_styles = mp.solutions.drawing_styles
+mp_pose = mp.solutions.pose
+
+#dynamic setup
+width = 1366
+height = 768
+
+ground_y = int(height - ((height * 13.81) / 100)) # height - 100
+player_x = int((width * 7.81) / 100) # 100
+player_y = int((height * 13.89) / 100) # 100
+fruit_x = int((width * 3.91) / 100) # 50
+fruit_y = int((height * 6.94) / 100) # 50
+tree_x = int((width * 15.63) / 100) # 200
+tree_ground = ground_y + fruit_x # ground_y + 50
+health_x = int((width * 3.91) / 100) # 50
+health_y = int((height * 6.94) / 100) # 50
+scale_x_50 = int((width * 3.91) / 100) # 50
+scale_y_50 = int((height * 6.94) / 100) # 50
+scale_x_100 = int((width * 7.81) / 100) # 100
+scale_y_100 = int((height * 13.89) / 100) # 100
+scale_x_150 = int((width * 11.72) / 100) # 150
+scale_y_150 = int((height * 20.83) / 100) # 150
+scale_x_200 = int((width * 15.63) / 100) # 200
+scale_y_200 = int((height * 27.78) / 100) # 200
+
+#volume
+volume = 0.1
+
+
+# pygame setup
+pygame.init()
+screen = pygame.display.set_mode((width, height))
+#screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+clock = pygame.time.Clock()
+running = True
+fps = 60
+dt = 0
+game_active = False
+game_over = False
+
+cap = cv2.VideoCapture(0)
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()  
-        player_f = pygame.image.load("assets/player.png").convert_alpha()
-        player_lf = pygame.image.load("assets/player-l.png").convert_alpha()
-        self.player_frames = [player_f, player_lf]
+        player_f = pygame.image.load("assets/player/farmer.png").convert_alpha()
+        player_s = pygame.image.load("assets/player/farmer.png").convert_alpha()
+        self.player_frames = [player_f, player_s]
         self.player_index = 0
         self.image = self.player_frames[self.player_index]
-        self.image = pygame.transform.scale(self.image, (100, 100))
+        self.image = pygame.transform.scale(self.image, (player_x, player_y))
         #self.image = pygame.image.load("assets/player.png").convert_alpha()
         #self.image = pygame.transform.scale(self.image, (100, 100))
-        self.rect = self.image.get_rect(midbottom=(width / 2, height - 80))
+        self.rect = self.image.get_rect(midbottom=(width / 2, ground_y))
         self.speed = 1000
 
+    def comvis_input(self, x):
+        if x > 0 and x < width:
+            self.rect.x = x
+            
     """ 
     keyboard input
     """
@@ -35,44 +89,48 @@ class Player(pygame.sprite.Sprite):
             self.player_index = 1
             self.image = self.player_frames[self.player_index]
             self.image = pygame.transform.flip(self.image, True, False)
+            self.image = pygame.transform.scale(self.image, (player_x, player_y))
         elif keys[pygame.K_d]:
             self.player_index = 1
             self.image = self.player_frames[self.player_index]
+            self.image = pygame.transform.scale(self.image, (player_x, player_y))
         else:
             self.player_index = 0
             self.image = self.player_frames[self.player_index]
-            self.image = pygame.transform.scale(self.image, (100, 100))
+            self.image = pygame.transform.scale(self.image, (player_x, player_y))
+
 
     """ def movement(self):
         randomx = randint(0, width)
         self.rect.x = randomx """
 
-    def update(self):
+    def update(self, x = width / 2):
+        self.comvis_input(x)
         self.player_input()
         self.animation_state()
         """ self.movement()
  """
 class Fruit(pygame.sprite.Sprite):
-    def __init__(self, x, y, fallTime):
+    def __init__(self, x, y, fallTime, speed):
         super().__init__()
         fruits = [
-            'assets/fruits/1.png',
-            'assets/fruits/2.png',
-            'assets/fruits/3.png',
-            'assets/fruits/4.png',
-            'assets/fruits/5.png',
-            'assets/fruits/6.png',
-            'assets/fruits/7.png'
+            'assets/fruits/apple.png',
+            'assets/fruits/cherry-pie.png',
+            'assets/fruits/mango.png',
+            'assets/fruits/orange.png',
+            'assets/fruits/pear.png',
         ]
-        self.scale = 0.5
-        self.image = pygame.image.load(fruits[randint(0, 6)]).convert_alpha()
-        self.image = pygame.transform.scale_by(self.image, self.scale)
-        self.rect = self.image.get_rect(midbottom=(randint(x - 10, x + 10), height / 4))
-        self.speed = 50
+        self.scale = (fruit_x, fruit_y)
+        self.image = pygame.image.load(fruits[randint(0, len(fruits)-1)]).convert_alpha()
+        self.image = pygame.transform.scale(self.image, self.scale)
+        self.rect = self.image.get_rect(midbottom=(randint(x - 20, x + 20), height / 4))
+        self.speed = speed
         self.fallTime = fallTime
-
+        self.drop_sound = pygame.mixer.Sound('assets/sound/drop.wav')
+        self.drop_sound.set_volume(volume)
         """ self.fallTime = randint(1,3) """
         self.angle = 0
+        
 
     """ 
     methods for animating the fruit fall
@@ -81,7 +139,7 @@ class Fruit(pygame.sprite.Sprite):
         if self.fallTime > 0:
             self.fallTime -= dt 
         else:
-            self.rect.y += self.speed * 0.1
+            self.rect.y += self.speed * 0.2
 
     """ 
     todo add spawn animation
@@ -97,20 +155,23 @@ class Fruit(pygame.sprite.Sprite):
             self.image = pygame.transform.scale_by(self.image, self.scale)
         else:
             return False
+    """
 
-
-    def falling_animation(self):
-        if self.spawn_animation == False:
+    """ def falling_animation(self):
             self.angle += 0 * dt
-            self.image = pygame.transform.rotate(self.image, self.angle) """
+            self.image = pygame.transform.rotate(self.image, self.angle)
+            #self.image = pygame.transform.scale(self.image, self.scale)
+             """
     
     def destroy(self):
-        if self.rect.y > height - 100:
+        if self.rect.y > ground_y:
+            self.drop_sound.play()
             decrement_health()
             self.kill()
 
     def update(self):
         #self.spawn_animation()
+        #self.falling_animation()
         self.gravity()
         self.destroy()
 
@@ -118,14 +179,15 @@ class Fruit(pygame.sprite.Sprite):
 class Tree(pygame.sprite.Sprite):
     def __init__(self, x,y):
         super().__init__()
-        tree_n = pygame.image.load("assets/tree/1.png").convert_alpha()
-        tree_s = pygame.image.load("assets/tree/2.png").convert_alpha()
-        self.tree_frames = [tree_n, tree_s]
+        tree_n = pygame.image.load("assets/tree/tree.png").convert_alpha()
+        tree_s = pygame.image.load("assets/tree/tree-slant.png").convert_alpha()
+        tree_s2 = pygame.image.load("assets/tree/tree-slant2.png").convert_alpha()
+        self.tree_frames = [tree_n, tree_s, tree_s2]
         self.tree_index = 0
         self.image = self.tree_frames[self.tree_index]
-        self.image = pygame.transform.scale(self.image, (200, height - 100))
+        self.image = pygame.transform.scale(self.image, (tree_x, tree_ground))
         self.rect = self.image.get_rect(midbottom=(x, y))
-        self.sway_time = randint(1,2)
+        self.sway_time = randint(0,1)
         self.sway_flag = False
         self.sway_duration = 2
         
@@ -141,7 +203,6 @@ class Tree(pygame.sprite.Sprite):
     method to control the animation state of the tree
     """
     def animation_state(self):
-        """ print(self.sway_flag) """
         if self.sway_flag and self.sway_duration > 0:
             self.sway()
             self.sway_duration -= dt
@@ -154,7 +215,6 @@ class Tree(pygame.sprite.Sprite):
     method for flagging when the tree should sway 
     """
     def to_sway(self):
-        """ print(self.sway_time) """
         if self.sway_time > 0 and self.sway_flag == False:
             self.sway_time -= dt
             self.sway_flag = False
@@ -170,7 +230,7 @@ class Tree(pygame.sprite.Sprite):
         if self.tree_index >= len(self.tree_frames):
             self.tree_index = 0
         self.image = self.tree_frames[int(self.tree_index)]
-        self.image = pygame.transform.scale(self.image, (200, height - 100))
+        self.image = pygame.transform.scale(self.image, (tree_x, tree_ground))
         
     def update(self):
         """ self.add_fruit() """
@@ -183,12 +243,15 @@ functions
 """
 #randomnum
 def randomnum():
-    num = randint(5, 7)
+    num = randint(1, 3)
     return num
 
 #collision
 def collision():
     if pygame.sprite.spritecollide(player.sprite, fruit_group, True):
+        sound = pygame.mixer.Sound('assets/sound/Pickup.wav')
+        sound.set_volume(volume)
+        sound.play()
         return True
     else:
         return False
@@ -196,18 +259,18 @@ def collision():
 #score
 def display_score(score):
     score_surf = pixel_font.render(f'Score: {score}', False, (64, 64, 64))
-    score_rect = score_surf.get_rect(center=(width - 100, 50))
+    score_rect = score_surf.get_rect(center=(width - scale_x_150, scale_y_50))
     screen.blit(score_surf, score_rect)
 
 #level
 def display_level(level):
     level_surf = pixel_font.render(f'Level: {level}', False, (64, 64, 64))
-    level_rect = level_surf.get_rect(center=(width - 100, 100))
+    level_rect = level_surf.get_rect(center=(width - scale_x_150, scale_y_100))
     screen.blit(level_surf, level_rect)
 
 def display_time():
-    time_surf = pixel_font.render(f'Time: {int(counter)}', False, (64, 64, 64))
-    time_rect = time_surf.get_rect(center=(width - 100, 150))
+    time_surf = pixel_font.render(f'Time: {int(timer)}', False, (64, 64, 64))
+    time_rect = time_surf.get_rect(center=(width - scale_x_150, scale_y_150))
     screen.blit(time_surf, time_rect)
 
 
@@ -217,7 +280,8 @@ intro func
 
 #start btn
 def display_start():
-    start_surf = pixel_font.render(f'Start', False, (64, 64, 64))
+    start_font = pygame.font.Font('font/Pixeltype.ttf', scale_x_200)
+    start_surf = start_font.render(f'Start', False, (64, 64, 64))
     start_rect = start_surf.get_rect(center=(width / 2, height / 2))
     screen.blit(start_surf, start_rect)
 
@@ -225,10 +289,16 @@ def display_start():
     if start_rect.collidepoint(pygame.mouse.get_pos()):
         if pygame.mouse.get_pressed()[0]:
             return True
+        
+    if start_rect.collidepoint(mouse_rect.centerx, mouse_rect.centery):
+        start_surf = pixel_font.render(f'Start', False, (255, 255, 255), (64, 64, 64))
+        return True
+
 
 #restart btn
 def display_restart():
-    restart_surf = pixel_font.render(f'Restart', False, (64, 64, 64))
+    restart_font = pygame.font.Font('font/Pixeltype.ttf', scale_x_150)
+    restart_surf = restart_font.render(f'Restart', False, (64, 64, 64))
     restart_rect = restart_surf.get_rect(center=(width / 2, height / 2))
     screen.blit(restart_surf, restart_rect)
 
@@ -236,17 +306,27 @@ def display_restart():
     if restart_rect.collidepoint(pygame.mouse.get_pos()):
         if pygame.mouse.get_pressed()[0]:
             return True
+    
+    if restart_rect.collidepoint(mouse_rect.centerx, mouse_rect.centery):
+        return True
 
 #quit
 def display_quit():
     quit_surf = pixel_font.render(f'Quit', False, (64, 64, 64))
-    quit_rect = quit_surf.get_rect(center=(width / 2, (height / 2) + 100))
+    quit_rect = quit_surf.get_rect(center=(width / 2, (height / 2) + scale_y_100))
     screen.blit(quit_surf, quit_rect)
 
     # Check if the start button has been clicked
     if quit_rect.collidepoint(pygame.mouse.get_pos()):
         if pygame.mouse.get_pressed()[0]:
             return True
+        
+#score
+def display_gameover_score(game_over_score):
+    score_font = pygame.font.Font('font/Pixeltype.ttf', scale_x_150)
+    score_surf = score_font.render(f'Score: {game_over_score}', False, (64, 64, 64))
+    score_rect = score_surf.get_rect(center=(width / 2, (height / 2) - scale_y_100))
+    screen.blit(score_surf, score_rect)
 
 hearts = [
             'assets/heart1.png',
@@ -260,38 +340,39 @@ def decrement_health():
   health -= 1
 
 def display_health():
-    health_surf = pygame.image.load(hearts[health - 1]).convert_alpha()
+    for index in range(health):
+        health_surf = pygame.image.load('assets/heart.png').convert_alpha()
+        health_surf = pygame.transform.scale(health_surf, (health_x, health_y))
+        health_rect = health_surf.get_rect(center=((health_x + index * health_x), health_x))
+        screen.blit(health_surf, health_rect)
+
+    """ health_surf = pygame.image.load(hearts[health - 1]).convert_alpha()
     health_surf = pygame.transform.scale(health_surf, (300, 50))
     health_rect = health_surf.get_rect(center=(300, 50))
     screen.blit(health_surf, health_rect)
+ """
 
-# pygame setup
-width = 1280
-height = 720
-pygame.init()
-screen = pygame.display.set_mode((width, height))
-clock = pygame.time.Clock()
-running = True
-fps = 60
-dt = 0
-game_active = False
-game_over = False
-
-#constants
-score = 0
-health = 3
-level = 0
-
-pixel_font = pygame.font.Font('font/Pixeltype.ttf', 50)
+pixel_font = pygame.font.Font('font/Pixeltype.ttf', scale_x_100)
 
 sky = pygame.image.load("assets/Sky.png").convert()
 ground = pygame.image.load("assets/ground.png").convert()
 
 
 skyScaled = pygame.transform.scale(sky, (width, height))
-groundScaled = pygame.transform.scale(ground, (width, 100))
+groundScaled = pygame.transform.scale(ground, (width, tree_ground))
+
+background = pygame.image.load("assets/background.png").convert()
+background = pygame.transform.scale(background, (width, height))
+
+mouse = pygame.image.load("assets/mouse.png").convert_alpha()
+mouse = pygame.transform.scale(mouse, (scale_x_50, scale_y_50))
+mouse_rect = mouse.get_rect(center=(0, 0))
 
 
+#bg music
+pygame.mixer.music.load('assets/sound/Background.mp3')
+pygame.mixer.music.set_volume(volume)
+pygame.mixer.music.play(loops = -1)
 """
 intro
 """
@@ -305,11 +386,11 @@ fruit_group = pygame.sprite.Group()
 
 #tree setup
 tree_list = [
-    (100, height - 50),
-    (300, height - 50),
-    (width/2, height - 50),
-    (width - 300, height - 50),
-    (width - 100, height - 50),
+    (width/7, tree_ground),
+    (width/3, tree_ground),
+    (width/2, tree_ground),
+    (int(width -(width/3)), tree_ground),
+    (int(width - (width/7)), tree_ground),
 ]
 
 trees = pygame.sprite.Group()
@@ -323,16 +404,52 @@ user events
 fruit_timer = pygame.USEREVENT + 1
 pygame.time.set_timer(fruit_timer, 2000)
 
+#constants
+score = 0
+health = 3
+level = 0
+
 #time
 time_test = pygame.time.get_ticks()
 counter = 0
 timer = 0
 
 #levels
-fruit_spawn = 2
-fruit_fall_speed = 1
+fruit_spawn = 3
+fruit_fall_speed = 50
 
-while running:
+with mp_pose.Pose(
+    min_detection_confidence=0.5,
+    min_tracking_confidence=0.5) as pose:
+  
+  
+  while cap.isOpened() and running: 
+    success, image = cap.read()
+    if not success:
+      print("Ignoring empty camera frame.")
+      continue
+
+   
+    image.flags.writeable = False
+    image = cv2.flip(image,1)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    results = pose.process(image)
+
+    image.flags.writeable = True
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+
+    mp_drawing.draw_landmarks(
+        image,
+        results.pose_landmarks,
+        mp_pose.POSE_CONNECTIONS,
+        landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style()
+        )
+    
+    cv2.imshow('MediaPipe Pose',image)
+
+    if cv2.waitKey(5) & 0xFF == 27:
+      break
+
     # poll for events
     # pygame.QUIT event means the user clicked X to close your window
     for event in pygame.event.get():
@@ -353,7 +470,7 @@ while running:
                                     Fruit(x=tree2[0], y=tree2[1]), 
                                     Fruit(x=tree3[0], y=tree3[1])])) """
         if event.type == fruit_timer and len(fruit_group) < fruit_spawn:
-            fruit_group.add(choice([Fruit(x=tree.rect.centerx, y=100, fallTime=tree.sway_time) for tree in trees]))
+            fruit_group.add(choice([Fruit(x=tree.rect.centerx, y=100, fallTime=tree.sway_time, speed=fruit_fall_speed) for tree in trees]))
 
     if game_active:
         tick = pygame.time.get_ticks()
@@ -365,13 +482,15 @@ while running:
         if counter >= 60:
             level += 1
             fruit_spawn += 1
+            fruit_fall_speed += 10
             counter = 0
 
         start_time = int(pygame.time.get_ticks() / 1000)
 
         # draw background
-        screen.blit(skyScaled, (0, 0))
-        screen.blit(groundScaled, (0, height - 100))
+        screen.blit(background, (0, 0, width, height))
+        #screen.blit(skyScaled, (0, 0))
+        #screen.blit(groundScaled, (0, height - 100))
 
         trees.draw(screen)
         trees.update()
@@ -388,41 +507,64 @@ while running:
         display_level(level)
         display_time()
 
-        player.draw(screen)
-        player.update()
+        if results.pose_landmarks is not None:
+            nose_x = results.pose_landmarks.landmark[mp_pose.PoseLandmark.NOSE].x
+            nose_x_flipped = nose_x
+            player.update(nose_x_flipped * width)
+            player.draw(screen)
+        else:
+            print("No person detected.")
+
+        
 
         pygame.display.update()
-
         
         # health
         if health <= 0:
             game_over = True
             game_active = False
             health = 3
-            score = 0
             level = 0
+            timer = 0
             counter = 0
+            #level props
+            fruit_spawn = 3
+            fruit_fall_speed = 50
+
             fruit_group.remove(fruit_group.sprites())
            
     elif game_active == False and game_over == False:
         """
         intro screen 
         """
+
         # draw background
-        screen.blit(skyScaled, (0, 0))
-        screen.blit(groundScaled, (0, height - 100))
+        screen.blit(background, (0, 0, width, height))
+        """ screen.blit(skyScaled, (0, 0))
+        screen.blit(groundScaled, (0, height - 100)) """
 
         trees.draw(screen)
 
         player.draw(screen)
 
+        
+
         if display_start():
             game_active = True
         
-        if display_quit():
-            quit()
+        if results.pose_landmarks is not None:
+            r_index_x = results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_INDEX].x
+            r_index_y = results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_INDEX].y
+            
+            mouse_rect.centerx = (r_index_x * width)
+            mouse_rect.centery = (r_index_y * height)
+            screen.blit(mouse, (r_index_x * width, r_index_y * height))
+            
+        else:
+            print("No person detected.")
 
         pygame.display.update()
+
     else:
         """ 
         game over screen 
@@ -431,15 +573,23 @@ while running:
         if tick - time_test >= 1000:
             counter += 1
             time_test = tick
+
+        if counter >= 30:
+            game_over = False
+            counter = 0
+
         start_time = int(pygame.time.get_ticks() / 1000)
         game_start = clock.get_time()
         # draw background
-        screen.blit(skyScaled, (0, 0))
-        screen.blit(groundScaled, (0, height - 100))
+        screen.blit(background, (0, 0, width, height))
+        """ screen.blit(skyScaled, (0, 0))
+        screen.blit(groundScaled, (0, height - 100)) """
 
         trees.draw(screen)
 
         player.draw(screen)
+
+        display_gameover_score(score)
 
         if display_restart():
             game_active = True
@@ -448,10 +598,24 @@ while running:
             score = 0
             level = 0
             counter = 0
+            timer = 0
+
+            #level props
+            fruit_spawn = 3
+            fruit_fall_speed = 50
+
             fruit_group.remove(fruit_group.sprites())
 
-        if display_quit():
-            quit()
+        if results.pose_landmarks is not None:
+            r_index_x = results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_INDEX].x
+            r_index_y = results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_INDEX].y
+            
+            mouse_rect.centerx = (r_index_x * width)
+            mouse_rect.centery = (r_index_y * height)
+            screen.blit(mouse, (r_index_x * width, r_index_y * height))
+            
+        else:
+            print("No person detected.")
 
         pygame.display.update()
 
@@ -462,3 +626,5 @@ while running:
     dt = clock.tick(60) / 1000
 
 pygame.quit()
+cap.release()
+cv2.destroyAllWindows()
