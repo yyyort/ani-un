@@ -3,9 +3,6 @@ from random import randint, choice
 
 #comvis
 import mediapipe as mp
-from mediapipe.tasks import python
-from mediapipe.tasks.python import vision
-import numpy as np
 import cv2
 
 #setup mediapipe instance
@@ -22,8 +19,8 @@ width = monitor[0].width
 height = monitor[0].height
 
 #static setup
-""" width = 1366
-height = 768 """
+""" width = 700
+height = 700 """
 
 ground_y = int(height - ((height * 13.81) / 100)) # height - 100
 player_x = int((width * 7.81) / 100) # 100
@@ -237,7 +234,7 @@ class Tree(pygame.sprite.Sprite):
     method to animate the tree 
     """
     def sway(self):
-        self.tree_index += 0.1
+        self.tree_index += 0.2
         if self.tree_index >= len(self.tree_frames):
             self.tree_index = 0
         self.image = self.tree_frames[int(self.tree_index)]
@@ -354,9 +351,9 @@ def display_credit_creatives():
     screen.blit(credit_surf, credit_rect)
 
 hearts = [
-            'assets/heart1.png',
-            'assets/heart2.png',
-            'assets/heart3.png'
+            'assets/heart/3.png',
+            'assets/heart/2.png',
+            'assets/heart/1.png',
         ]
 
 #health
@@ -365,11 +362,16 @@ def decrement_health():
   health -= 1
 
 def display_health():
-    for index in range(health):
-        health_surf = pygame.image.load('assets/heart.png').convert_alpha()
-        health_surf = pygame.transform.scale(health_surf, (health_x, health_y))
-        health_rect = health_surf.get_rect(center=((health_x + index * health_x), health_x))
-        screen.blit(health_surf, health_rect)
+    if health >= 3:
+        health_surf = pygame.image.load(hearts[2]).convert_alpha()
+    elif health == 2:
+        health_surf = pygame.image.load(hearts[1]).convert_alpha()
+    else:
+        health_surf = pygame.image.load(hearts[0]).convert_alpha()
+
+    health_surf = pygame.transform.scale(health_surf, (scale_x_100, scale_y_50))
+    health_rect = health_surf.get_rect(center=(health_x + scale_x_100, health_y))
+    screen.blit(health_surf, health_rect)
 
     """ health_surf = pygame.image.load(hearts[health - 1]).convert_alpha()
     health_surf = pygame.transform.scale(health_surf, (300, 50))
@@ -441,7 +443,7 @@ timer = 0
 
 #levels
 fruit_spawn = 3
-fruit_fall_speed = 80
+fruit_fall_speed = 50
 
 with mp_pose.Pose(
     min_detection_confidence=0.5,
@@ -476,6 +478,7 @@ with mp_pose.Pose(
       break
 
     print(clock.get_fps())
+    print(f'dt {dt}')
 
     # poll for events
     # pygame.QUIT event means the user clicked X to close your window
@@ -496,8 +499,9 @@ with mp_pose.Pose(
             fruit_group.add(choice([Fruit(x=tree1[0], y=tree1[1]),
                                     Fruit(x=tree2[0], y=tree2[1]), 
                                     Fruit(x=tree3[0], y=tree3[1])])) """
-        if event.type == fruit_timer and len(fruit_group) < fruit_spawn:
-            fruit_group.add(choice([Fruit(x=tree.rect.centerx, y=100, fallTime=tree.sway_time, speed=fruit_fall_speed) for tree in trees]))
+        if game_active:
+            if event.type == fruit_timer and len(fruit_group) < fruit_spawn:
+                fruit_group.add(choice([Fruit(x=tree.rect.centerx, y=100, fallTime=(tree.sway_time+0.5), speed=fruit_fall_speed) for tree in trees]))
 
     if game_active:
         tick = pygame.time.get_ticks()
@@ -530,9 +534,10 @@ with mp_pose.Pose(
             score += 1
 
         display_score(score)
-        display_health()
         display_level(level)
         display_time()
+
+        display_health()
 
         if results.pose_landmarks is not None:
             nose_x = results.pose_landmarks.landmark[mp_pose.PoseLandmark.NOSE].x
@@ -555,7 +560,7 @@ with mp_pose.Pose(
             counter = 0
             #level props
             fruit_spawn = 3
-            fruit_fall_speed = 80
+            fruit_fall_speed = 50
 
             fruit_group.remove(fruit_group.sprites())
            
@@ -632,7 +637,7 @@ with mp_pose.Pose(
 
             #level props
             fruit_spawn = 3
-            fruit_fall_speed = 80
+            fruit_fall_speed = 50
 
             fruit_group.remove(fruit_group.sprites())
 
