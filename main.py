@@ -538,11 +538,10 @@ with mp_pose.Pose(
             nose_x = results.pose_landmarks.landmark[mp_pose.PoseLandmark.NOSE].x
             nose_x_flipped = nose_x
             player.update(nose_x_flipped * width)
-            player.draw(screen)
         else:
             print("No person detected.")
 
-        
+        player.draw(screen)
 
         pygame.display.update()
         
@@ -556,7 +555,7 @@ with mp_pose.Pose(
             counter = 0
             #level props
             fruit_spawn = 3
-            fruit_fall_speed = 50
+            fruit_fall_speed = 80
 
             fruit_group.remove(fruit_group.sprites())
            
@@ -633,7 +632,7 @@ with mp_pose.Pose(
 
             #level props
             fruit_spawn = 3
-            fruit_fall_speed = 50
+            fruit_fall_speed = 80
 
             fruit_group.remove(fruit_group.sprites())
 
