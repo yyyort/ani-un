@@ -34,6 +34,8 @@ tree_x = int((width * 15.63) / 100) # 200
 tree_ground = ground_y + fruit_x # ground_y + 50
 health_x = int((width * 3.91) / 100) # 50
 health_y = int((height * 6.94) / 100) # 50
+scale_x_20 = int((width * 1.56) / 100) # 20
+scale_y_20 = int((height * 3.47) / 100) # 20
 scale_x_50 = int((width * 3.91) / 100) # 50
 scale_y_50 = int((height * 6.94) / 100) # 50
 scale_x_100 = int((width * 7.81) / 100) # 100
@@ -42,6 +44,7 @@ scale_x_150 = int((width * 11.72) / 100) # 150
 scale_y_150 = int((height * 20.83) / 100) # 150
 scale_x_200 = int((width * 15.63) / 100) # 200
 scale_y_200 = int((height * 27.78) / 100) # 200
+
 
 #volume
 volume = 0.1
@@ -286,6 +289,7 @@ def display_time():
 intro func
 """
 
+
 #start btn
 def display_start():
     start_font = pygame.font.Font('font/Pixeltype.ttf', scale_x_200)
@@ -335,6 +339,19 @@ def display_gameover_score(game_over_score):
     score_surf = score_font.render(f'Score: {game_over_score}', False, (64, 64, 64))
     score_rect = score_surf.get_rect(center=(width / 2, (height / 2) - scale_y_100))
     screen.blit(score_surf, score_rect)
+
+#credit
+def display_credit_dev():
+    credit_font = pygame.font.Font('font/Pixeltype.ttf', scale_x_20)
+    credit_surf = credit_font.render(f'Developers: Ian Troy Pahilga, Shon Mikhael Gesulgon, Christian Jay Allado, Joseph Andrean De La Cruz', False, (255, 255, 255))
+    credit_rect = credit_surf.get_rect(center=((width / 4 - 30), ground_y + scale_y_50 + scale_y_20 - 10 ))
+    screen.blit(credit_surf, credit_rect)
+
+def display_credit_creatives():
+    credit_font = pygame.font.Font('font/Pixeltype.ttf', scale_x_20)
+    credit_surf = credit_font.render(f'Creatives: Markuly Chua, Alexandra Cristina Gepes, Diego Paul Leetian', False, (255, 255, 255))
+    credit_rect = credit_surf.get_rect(center=(int(width - width/6), ground_y + scale_y_50 + scale_y_20 - 10))
+    screen.blit(credit_surf, credit_rect)
 
 hearts = [
             'assets/heart1.png',
@@ -424,7 +441,7 @@ timer = 0
 
 #levels
 fruit_spawn = 3
-fruit_fall_speed = 50
+fruit_fall_speed = 80
 
 with mp_pose.Pose(
     min_detection_confidence=0.5,
@@ -457,6 +474,8 @@ with mp_pose.Pose(
 
     if cv2.waitKey(5) & 0xFF == 27:
       break
+
+    print(clock.get_fps())
 
     # poll for events
     # pygame.QUIT event means the user clicked X to close your window
@@ -555,7 +574,8 @@ with mp_pose.Pose(
 
         player.draw(screen)
 
-        
+        display_credit_dev()
+        display_credit_creatives()
 
         if display_start():
             game_active = True
@@ -598,6 +618,9 @@ with mp_pose.Pose(
         player.draw(screen)
 
         display_gameover_score(score)
+
+        display_credit_dev()
+        display_credit_creatives()
 
         if display_restart():
             game_active = True
