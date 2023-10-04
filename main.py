@@ -1,4 +1,3 @@
-# Example file showing a circle moving on screen
 import pygame
 from random import randint, choice
 
@@ -15,8 +14,8 @@ mp_drawing_styles = mp.solutions.drawing_styles
 mp_pose = mp.solutions.pose
 
 #dynamic setup
-width = 640
-height = 640
+width = 1366
+height = 768
 
 ground_y = int(height - ((height * 13.81) / 100)) # height - 100
 player_x = int((width * 7.81) / 100) # 100
@@ -36,19 +35,20 @@ scale_y_150 = int((height * 20.83) / 100) # 150
 scale_x_200 = int((width * 15.63) / 100) # 200
 scale_y_200 = int((height * 27.78) / 100) # 200
 
+#volume
+volume = 0.1
 
 
 # pygame setup
 pygame.init()
-#screen = pygame.display.set_mode((width, height))
-screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+screen = pygame.display.set_mode((width, height))
+#screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 clock = pygame.time.Clock()
 running = True
 fps = 60
 dt = 0
 game_active = False
 game_over = False
-
 
 cap = cv2.VideoCapture(0)
 
@@ -104,7 +104,7 @@ class Player(pygame.sprite.Sprite):
         randomx = randint(0, width)
         self.rect.x = randomx """
 
-    def update(self, x = 500):
+    def update(self, x = width / 2):
         self.comvis_input(x)
         self.player_input()
         self.animation_state()
@@ -126,9 +126,11 @@ class Fruit(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(midbottom=(randint(x - 20, x + 20), height / 4))
         self.speed = speed
         self.fallTime = fallTime
-
+        self.drop_sound = pygame.mixer.Sound('assets/sound/drop.wav')
+        self.drop_sound.set_volume(volume)
         """ self.fallTime = randint(1,3) """
         self.angle = 0
+        
 
     """ 
     methods for animating the fruit fall
@@ -137,7 +139,7 @@ class Fruit(pygame.sprite.Sprite):
         if self.fallTime > 0:
             self.fallTime -= dt 
         else:
-            self.rect.y += self.speed * 0.1
+            self.rect.y += self.speed * 0.2
 
     """ 
     todo add spawn animation
@@ -163,6 +165,7 @@ class Fruit(pygame.sprite.Sprite):
     
     def destroy(self):
         if self.rect.y > ground_y:
+            self.drop_sound.play()
             decrement_health()
             self.kill()
 
@@ -246,6 +249,9 @@ def randomnum():
 #collision
 def collision():
     if pygame.sprite.spritecollide(player.sprite, fruit_group, True):
+        sound = pygame.mixer.Sound('assets/sound/Pickup.wav')
+        sound.set_volume(volume)
+        sound.play()
         return True
     else:
         return False
@@ -253,18 +259,18 @@ def collision():
 #score
 def display_score(score):
     score_surf = pixel_font.render(f'Score: {score}', False, (64, 64, 64))
-    score_rect = score_surf.get_rect(center=(width - scale_x_100, scale_y_50))
+    score_rect = score_surf.get_rect(center=(width - scale_x_150, scale_y_50))
     screen.blit(score_surf, score_rect)
 
 #level
 def display_level(level):
     level_surf = pixel_font.render(f'Level: {level}', False, (64, 64, 64))
-    level_rect = level_surf.get_rect(center=(width - scale_x_100, scale_y_100))
+    level_rect = level_surf.get_rect(center=(width - scale_x_150, scale_y_100))
     screen.blit(level_surf, level_rect)
 
 def display_time():
     time_surf = pixel_font.render(f'Time: {int(timer)}', False, (64, 64, 64))
-    time_rect = time_surf.get_rect(center=(width - scale_x_100, scale_y_150))
+    time_rect = time_surf.get_rect(center=(width - scale_x_150, scale_y_150))
     screen.blit(time_surf, time_rect)
 
 
@@ -291,7 +297,8 @@ def display_start():
 
 #restart btn
 def display_restart():
-    restart_surf = pixel_font.render(f'Restart', False, (64, 64, 64))
+    restart_font = pygame.font.Font('font/Pixeltype.ttf', scale_x_150)
+    restart_surf = restart_font.render(f'Restart', False, (64, 64, 64))
     restart_rect = restart_surf.get_rect(center=(width / 2, height / 2))
     screen.blit(restart_surf, restart_rect)
 
@@ -345,7 +352,7 @@ def display_health():
     screen.blit(health_surf, health_rect)
  """
 
-pixel_font = pygame.font.Font('font/Pixeltype.ttf', scale_x_50)
+pixel_font = pygame.font.Font('font/Pixeltype.ttf', scale_x_100)
 
 sky = pygame.image.load("assets/Sky.png").convert()
 ground = pygame.image.load("assets/ground.png").convert()
@@ -361,6 +368,11 @@ mouse = pygame.image.load("assets/mouse.png").convert_alpha()
 mouse = pygame.transform.scale(mouse, (scale_x_50, scale_y_50))
 mouse_rect = mouse.get_rect(center=(0, 0))
 
+
+#bg music
+pygame.mixer.music.load('assets/sound/Background.mp3')
+pygame.mixer.music.set_volume(volume)
+pygame.mixer.music.play(loops = -1)
 """
 intro
 """
@@ -515,6 +527,10 @@ with mp_pose.Pose(
             level = 0
             timer = 0
             counter = 0
+            #level props
+            fruit_spawn = 3
+            fruit_fall_speed = 50
+
             fruit_group.remove(fruit_group.sprites())
            
     elif game_active == False and game_over == False:
@@ -557,6 +573,11 @@ with mp_pose.Pose(
         if tick - time_test >= 1000:
             counter += 1
             time_test = tick
+
+        if counter >= 30:
+            game_over = False
+            counter = 0
+
         start_time = int(pygame.time.get_ticks() / 1000)
         game_start = clock.get_time()
         # draw background
@@ -578,6 +599,11 @@ with mp_pose.Pose(
             level = 0
             counter = 0
             timer = 0
+
+            #level props
+            fruit_spawn = 3
+            fruit_fall_speed = 50
+
             fruit_group.remove(fruit_group.sprites())
 
         if results.pose_landmarks is not None:
