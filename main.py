@@ -58,7 +58,26 @@ dt = 0
 game_active = False
 game_over = False
 
-cap = cv2.VideoCapture(0)
+#use try and except
+""" try:
+    cap = cv2.VideoCapture(1)
+except (cv2.error, IndexError, Exception, cv2.error):
+    # If the first camera is not available, try to open the second camera
+    try:
+        cap = cv2.VideoCapture(0)
+    except cv2.error:
+        # If neither camera is available, print an error message and exit
+        print("Could not open any camera.")
+        exit() """
+
+try:
+    cap = cv2.VideoCapture(1)
+except Exception as e:
+    print(e)
+finally:
+    cap = cv2.VideoCapture(0)
+
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -341,13 +360,13 @@ def display_gameover_score(game_over_score):
 def display_credit_dev():
     credit_font = pygame.font.Font('font/Pixeltype.ttf', scale_x_20)
     credit_surf = credit_font.render(f'Developers: Ian Troy Pahilga, Shon Mikhael Gesulgon, Christian Jay Allado, Joseph Andrean De La Cruz', False, (255, 255, 255))
-    credit_rect = credit_surf.get_rect(center=((width / 4 - 30), ground_y + scale_y_50 + scale_y_20 - 10 ))
+    credit_rect = credit_surf.get_rect(center=((width / 4 + scale_x_20), ground_y + scale_y_50 + scale_y_20 - 10 ))
     screen.blit(credit_surf, credit_rect)
 
 def display_credit_creatives():
     credit_font = pygame.font.Font('font/Pixeltype.ttf', scale_x_20)
     credit_surf = credit_font.render(f'Creatives: Markuly Chua, Alexandra Cristina Gepes, Diego Paul Leetian', False, (255, 255, 255))
-    credit_rect = credit_surf.get_rect(center=(int(width - width/6), ground_y + scale_y_50 + scale_y_20 - 10))
+    credit_rect = credit_surf.get_rect(center=(int(width - width/6 - scale_x_20), ground_y + scale_y_50 + scale_y_20 - 10))
     screen.blit(credit_surf, credit_rect)
 
 hearts = [
@@ -479,6 +498,7 @@ with mp_pose.Pose(
     image.flags.writeable = False
     image = cv2.flip(image,1)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    #image = cv2.resize(image, (width, height)) #full screen
     results = pose.process(image)
 
     image.flags.writeable = True
