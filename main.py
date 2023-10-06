@@ -308,7 +308,7 @@ def display_start():
 def display_restart():
     restart_font = pygame.font.Font('font/Pixeltype.ttf', scale_x_150)
     restart_surf = restart_font.render(f'Restart', False, (64, 64, 64))
-    restart_rect = restart_surf.get_rect(center=(width / 2, height / 2))
+    restart_rect = restart_surf.get_rect(center=(width / 2, (height / 2) - scale_y_100 - scale_y_50))
     screen.blit(restart_surf, restart_rect)
 
     # Check if the start button has been clicked
@@ -334,7 +334,7 @@ def display_quit():
 def display_gameover_score(game_over_score):
     score_font = pygame.font.Font('font/Pixeltype.ttf', scale_x_150)
     score_surf = score_font.render(f'Score: {game_over_score}', False, (64, 64, 64))
-    score_rect = score_surf.get_rect(center=(width / 2, (height / 2) - scale_y_100))
+    score_rect = score_surf.get_rect(center=(width / 2, (height / 2)))
     screen.blit(score_surf, score_rect)
 
 #credit
@@ -369,8 +369,8 @@ def display_health():
     else:
         health_surf = pygame.image.load(hearts[0]).convert_alpha()
 
-    health_surf = pygame.transform.scale(health_surf, (scale_x_100, scale_y_50))
-    health_rect = health_surf.get_rect(center=(health_x + scale_x_100, health_y))
+    health_surf = pygame.transform.scale(health_surf, (scale_x_100 + scale_x_100, scale_y_50 + scale_y_50))
+    health_rect = health_surf.get_rect(center=(health_x + scale_x_100, health_y + scale_y_20))
     screen.blit(health_surf, health_rect)
 
     """ health_surf = pygame.image.load(hearts[health - 1]).convert_alpha()
@@ -387,6 +387,25 @@ ground = pygame.image.load("assets/ground.png").convert()
 
 skyScaled = pygame.transform.scale(sky, (width, height))
 groundScaled = pygame.transform.scale(ground, (width, tree_ground))
+
+#background
+bg1 = pygame.image.load("assets/background/1.png").convert()
+bg1 = pygame.transform.scale(bg1, (width, height))
+bg2 = pygame.image.load("assets/background/2.png").convert()
+bg2 = pygame.transform.scale(bg2, (width, height))
+bg3 = pygame.image.load("assets/background/3.png").convert()
+bg3 = pygame.transform.scale(bg3, (width, height))
+bg4 = pygame.image.load("assets/background/4.png").convert()
+bg4 = pygame.transform.scale(bg4, (width, height))
+bg5 = pygame.image.load("assets/background/5.png").convert()
+bg5 = pygame.transform.scale(bg5, (width, height))
+
+bg_list = [bg1, bg2, bg3, bg4, bg5]
+
+def random_bg():
+    return randint(0, len(bg_list)-1)
+
+bg_index = random_bg()
 
 background = pygame.image.load("assets/background.png").convert()
 background = pygame.transform.scale(background, (width, height))
@@ -519,7 +538,8 @@ with mp_pose.Pose(
         start_time = int(pygame.time.get_ticks() / 1000)
 
         # draw background
-        screen.blit(background, (0, 0, width, height))
+        screen.blit(bg_list[bg_index], (0, 0, width, height))
+        #screen.blit(background, (0, 0, width, height))
         #screen.blit(skyScaled, (0, 0))
         #screen.blit(groundScaled, (0, height - 100))
 
@@ -558,6 +578,7 @@ with mp_pose.Pose(
             level = 0
             timer = 0
             counter = 0
+            bg_index = random_bg()
             #level props
             fruit_spawn = 3
             fruit_fall_speed = 50
@@ -570,7 +591,8 @@ with mp_pose.Pose(
         """
 
         # draw background
-        screen.blit(background, (0, 0, width, height))
+        screen.blit(bg_list[bg_index], (0, 0, width, height))
+        #screen.blit(background, (0, 0, width, height))
         """ screen.blit(skyScaled, (0, 0))
         screen.blit(groundScaled, (0, height - 100)) """
 
@@ -582,6 +604,7 @@ with mp_pose.Pose(
         display_credit_creatives()
 
         if display_start():
+            bg_index = random_bg()
             game_active = True
         
         if results.pose_landmarks is not None:
@@ -613,7 +636,8 @@ with mp_pose.Pose(
         start_time = int(pygame.time.get_ticks() / 1000)
         game_start = clock.get_time()
         # draw background
-        screen.blit(background, (0, 0, width, height))
+        screen.blit(bg_list[bg_index], (0, 0, width, height))
+        #screen.blit(background, (0, 0, width, height))
         """ screen.blit(skyScaled, (0, 0))
         screen.blit(groundScaled, (0, height - 100)) """
 
@@ -634,7 +658,7 @@ with mp_pose.Pose(
             level = 0
             counter = 0
             timer = 0
-
+            bg_index = random_bg()
             #level props
             fruit_spawn = 3
             fruit_fall_speed = 50
