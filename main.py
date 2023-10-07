@@ -31,6 +31,10 @@ tree_x = int((width * 15.63) / 100) # 200
 tree_ground = ground_y + fruit_x # ground_y + 50
 health_x = int((width * 3.91) / 100) # 50
 health_y = int((height * 6.94) / 100) # 50
+scale_x_5 = int((width * 0.39) / 100) # 5
+scale_y_5 = int((height * 0.87) / 100) # 5
+scale_x_10 = int((width * 0.78) / 100) # 10
+scale_y_10 = int((height * 1.74) / 100) # 10
 scale_x_20 = int((width * 1.56) / 100) # 20
 scale_y_20 = int((height * 3.47) / 100) # 20
 scale_x_50 = int((width * 3.91) / 100) # 50
@@ -71,11 +75,11 @@ except (cv2.error, IndexError, Exception, cv2.error):
         exit() """
 
 try:
-    cap = cv2.VideoCapture(1)
-except Exception as e:
-    print(e)
-finally:
     cap = cv2.VideoCapture(0)
+except Exception as e:
+    cap = cv2.VideoCapture(1)
+else:
+    print('No camera found')
 
 
 
@@ -90,7 +94,7 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.image, (player_x, player_y))
         #self.image = pygame.image.load("assets/player.png").convert_alpha()
         #self.image = pygame.transform.scale(self.image, (100, 100))
-        self.rect = self.image.get_rect(midbottom=(width / 2, ground_y))
+        self.rect = self.image.get_rect(midbottom=(width / 2, ground_y + scale_y_20 + scale_y_10 + scale_y_5))
         self.speed = 1000
 
     def comvis_input(self, x):
@@ -191,7 +195,7 @@ class Fruit(pygame.sprite.Sprite):
              """
     
     def destroy(self):
-        if self.rect.y > ground_y:
+        if self.rect.y > ground_y + scale_y_20 + scale_y_10 + scale_y_5:
             self.drop_sound.play()
             decrement_health()
             self.kill()
@@ -356,18 +360,30 @@ def display_gameover_score(game_over_score):
     score_rect = score_surf.get_rect(center=(width / 2, (height / 2)))
     screen.blit(score_surf, score_rect)
 
-#credit
+#credit  
 def display_credit_dev():
-    credit_font = pygame.font.Font('font/Pixeltype.ttf', scale_x_20)
-    credit_surf = credit_font.render(f'Developers: Ian Troy Pahilga, Shon Mikhael Gesulgon, Christian Jay Allado, Joseph Andrean De La Cruz', False, (255, 255, 255))
-    credit_rect = credit_surf.get_rect(center=((width / 4 + scale_x_20), ground_y + scale_y_50 + scale_y_20 - 10 ))
+    credit_font = pygame.font.Font('font/Pixeltype.ttf', scale_x_20 + scale_x_10)
+    credit_surf = credit_font.render(f"""Developers: Ian Troy Pahilga, Shon Mikhael Gesulgon,""", False, (0, 0, 0))
+    credit_rect = credit_surf.get_rect(center=((width / 4 + scale_x_20), ground_y + scale_y_50 + scale_y_20 - scale_y_20 ))
+    screen.blit(credit_surf, credit_rect)
+
+def display_credit_dev2():
+    credit_font = pygame.font.Font('font/Pixeltype.ttf', scale_x_20 + scale_x_10)
+    credit_surf = credit_font.render(f"""Christian Jay Allado, Joseph Andrean De La Cruz""", False, (0, 0, 0))
+    credit_rect = credit_surf.get_rect(center=((width / 4 + scale_x_20), ground_y + scale_y_50 + scale_y_20 - scale_y_10 ))
     screen.blit(credit_surf, credit_rect)
 
 def display_credit_creatives():
-    credit_font = pygame.font.Font('font/Pixeltype.ttf', scale_x_20)
-    credit_surf = credit_font.render(f'Creatives: Markuly Chua, Alexandra Cristina Gepes, Diego Paul Leetian', False, (255, 255, 255))
-    credit_rect = credit_surf.get_rect(center=(int(width - width/6 - scale_x_20), ground_y + scale_y_50 + scale_y_20 - 10))
+    credit_font = pygame.font.Font('font/Pixeltype.ttf', scale_x_20 + scale_x_10)
+    credit_surf = credit_font.render(f'Creatives: Markuly Chua, Alexandra Cristina Gepes,', False, (0, 0, 0))
+    credit_rect = credit_surf.get_rect(center=(int(width - width/6 - scale_x_50), ground_y + scale_y_50 + scale_y_20 - scale_y_20))
     screen.blit(credit_surf, credit_rect)
+def display_credit_creatives2():
+    credit_font = pygame.font.Font('font/Pixeltype.ttf', scale_x_20 + scale_x_10)
+    credit_surf = credit_font.render(f'Diego Paul Leetian', False, (0, 0, 0))
+    credit_rect = credit_surf.get_rect(center=(int(width - width/6 - scale_x_20), ground_y + scale_y_50 + scale_y_20 - scale_y_10))
+    screen.blit(credit_surf, credit_rect)
+
 
 hearts = [
             'assets/heart/3.png',
@@ -401,11 +417,11 @@ def display_health():
 pixel_font = pygame.font.Font('font/Pixeltype.ttf', scale_x_100)
 
 sky = pygame.image.load("assets/Sky.png").convert()
-ground = pygame.image.load("assets/ground.png").convert()
+ground = pygame.image.load("assets/ground_full.png").convert_alpha()
 
 
 skyScaled = pygame.transform.scale(sky, (width, height))
-groundScaled = pygame.transform.scale(ground, (width, tree_ground))
+groundScaled = pygame.transform.scale(ground, (width, scale_y_100))
 
 #background
 bg1 = pygame.image.load("assets/background/1.png").convert()
@@ -559,9 +575,10 @@ with mp_pose.Pose(
 
         # draw background
         screen.blit(bg_list[bg_index], (0, 0, width, height))
+        screen.blit(groundScaled, (0, height - scale_y_100 - scale_y_20))
         #screen.blit(background, (0, 0, width, height))
         #screen.blit(skyScaled, (0, 0))
-        #screen.blit(groundScaled, (0, height - 100))
+       
 
         trees.draw(screen)
         trees.update()
@@ -612,6 +629,7 @@ with mp_pose.Pose(
 
         # draw background
         screen.blit(bg_list[bg_index], (0, 0, width, height))
+        screen.blit(groundScaled, (0, height - scale_y_100 - scale_y_20))
         #screen.blit(background, (0, 0, width, height))
         """ screen.blit(skyScaled, (0, 0))
         screen.blit(groundScaled, (0, height - 100)) """
@@ -621,7 +639,9 @@ with mp_pose.Pose(
         player.draw(screen)
 
         display_credit_dev()
+        display_credit_dev2()
         display_credit_creatives()
+        display_credit_creatives2()
 
         if display_start():
             bg_index = random_bg()
@@ -657,6 +677,7 @@ with mp_pose.Pose(
         game_start = clock.get_time()
         # draw background
         screen.blit(bg_list[bg_index], (0, 0, width, height))
+        screen.blit(groundScaled, (0, height - scale_y_100 - scale_y_20))
         #screen.blit(background, (0, 0, width, height))
         """ screen.blit(skyScaled, (0, 0))
         screen.blit(groundScaled, (0, height - 100)) """
@@ -668,7 +689,9 @@ with mp_pose.Pose(
         display_gameover_score(score)
 
         display_credit_dev()
+        display_credit_dev2()
         display_credit_creatives()
+        display_credit_creatives2()
 
         if display_restart():
             game_active = True
