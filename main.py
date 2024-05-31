@@ -532,8 +532,8 @@ with mp_pose.Pose(
     if cv2.waitKey(5) & 0xFF == 27:
       break
 
-    print(clock.get_fps())
-    print(f'dt {dt}')
+    """ print(clock.get_fps())
+    print(f'dt {dt}') """
 
     # poll for events
     # pygame.QUIT event means the user clicked X to close your window
